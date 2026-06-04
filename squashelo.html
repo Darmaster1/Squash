@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squash ELO Tracker</title>
+    <style>
+        :root {
+            --bg: #f9f8f5;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-secondary: #6b6b6b;
+            --text-muted: #999;
+            --border: #e5e2dc;
+            --border-light: #f0ede8;
+            --primary: #2b5c3b;
+            --primary-hover: #1f4530;
+            --primary-light: #eaf3ed;
+            --accent: #c8502b;
+            --accent-hover: #a84120;
+            --gold: #c49b3f;
+            --silver: #8a8a8a;
+            --bronze: #b8784a;
+            --success: #2b5c3b;
+            --danger: #c8502b;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
+            --radius-sm: 6px;
+            --radius: 10px;
+            --radius-lg: 14px;
+            --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --transition: 0.2s ease;
+            --view-banner-bg: #fff8e6;
+            --view-banner-border: #e8d5a3;
+            --view-banner-text: #8b6914;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:var(--font); background:var(--bg); color:var(--text); line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+        .header { background:var(--card); border-bottom:1px solid var(--border); padding:0 24px; position:sticky; top:0; z-index:100; box-shadow:var(--shadow-sm); }
+        .header-inner { max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:60px; gap:12px; flex-wrap:wrap; }
+        .logo { font-size:1.2rem; font-weight:700; color:var(--primary); letter-spacing:-0.3px; white-space:nowrap; display:flex; align-items:center; gap:8px; }
+        .logo-icon { width:32px; height:32px; background:var(--primary); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.9rem; font-weight:800; flex-shrink:0; }
+        .group-badge { font-size:0.75rem; font-weight:600; background:var(--primary-light); color:var(--primary); padding:4px 10px; border-radius:20px; white-space:nowrap; max-width:200px; overflow:hidden; text-overflow:ellipsis; }
+        .nav-tabs { display:flex; gap:4px; list-style:none; }
+        .nav-tabs button { background:none; border:none; padding:8px 14px; font-size:0.85rem; font-weight:500; color:var(--text-secondary); cursor:pointer; border-radius:8px; transition:var(--transition); font-family:var(--font); white-space:nowrap; }
+        .nav-tabs button:hover { background:var(--primary-light); color:var(--primary); }
+        .nav-tabs button.active { background:var(--primary); color:#fff; font-weight:600; }
+
+        .view-banner { background:var(--view-banner-bg); border-bottom:1px solid var(--view-banner-border); color:var(--view-banner-text); text-align:center; padding:8px 16px; font-size:0.82rem; font-weight:500; letter-spacing:0.1px; }
+        .view-banner strong { font-weight:700; }
+
+        .main { max-width:1100px; margin:0 auto; padding:24px 24px 60px; }
+        .page { display:none; }
+        .page.active { display:block; }
+        .page-title { font-size:1.5rem; font-weight:700; margin-bottom:16px; letter-spacing:-0.3px; color:var(--text); }
+        .page-subtitle { font-size:0.9rem; color:var(--text-secondary); margin-bottom:20px; margin-top:-8px; }
+
+        .welcome-overlay { display:flex; align-items:center; justify-content:center; min-height:70vh; padding:24px; }
+        .welcome-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:40px 36px; box-shadow:var(--shadow-lg); max-width:520px; width:100%; text-align:center; }
+        .welcome-card h1 { font-size:1.6rem; font-weight:700; letter-spacing:-0.3px; margin-bottom:6px; }
+        .welcome-card .sub { color:var(--text-secondary); font-size:0.9rem; margin-bottom:28px; }
+        .welcome-card .form-group { text-align:left; margin-bottom:16px; }
+        .welcome-card input { width:100%; }
+        .existing-groups { margin-top:24px; text-align:left; border-top:1px solid var(--border-light); padding-top:20px; }
+        .existing-groups .section-label { margin-bottom:10px; }
+        .group-link-row { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:var(--radius-sm); cursor:pointer; transition:var(--transition); gap:10px; border:1px solid transparent; }
+        .group-link-row:hover { background:var(--bg); border-color:var(--border); }
+        .group-link-row .gname { font-weight:600; font-size:0.9rem; }
+        .group-link-row .gmeta { font-size:0.75rem; color:var(--text-muted); }
+        .btn-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+
+        .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); margin-bottom:20px; }
+        .card-header { font-weight:600; font-size:1rem; margin-bottom:16px; color:var(--text); letter-spacing:-0.2px; }
+        .card-row { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
+
+        .form-group { display:flex; flex-direction:column; gap:6px; min-width:130px; flex:1; }
+        .form-group label { font-size:0.78rem; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.4px; }
+        select, input[type="number"], input[type="text"], input[type="date"] { padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.9rem; font-family:var(--font); background:var(--bg); color:var(--text); transition:var(--transition); width:100%; }
+        select:focus, input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-light); background:#fff; }
+        input:disabled, select:disabled { opacity:0.6; cursor:not-allowed; background:#f5f5f5; }
+        .btn { padding:10px 20px; border:none; border-radius:var(--radius-sm); font-size:0.9rem; font-weight:600; cursor:pointer; transition:var(--transition); font-family:var(--font); letter-spacing:-0.1px; white-space:nowrap; }
+        .btn:disabled { opacity:0.5; cursor:not-allowed; pointer-events:none; }
+        .btn-primary { background:var(--primary); color:#fff; }
+        .btn-primary:hover:not(:disabled) { background:var(--primary-hover); box-shadow:var(--shadow); }
+        .btn-outline { background:#fff; color:var(--primary); border:1.5px solid var(--primary); }
+        .btn-outline:hover:not(:disabled) { background:var(--primary-light); }
+        .btn-danger { background:#fff; color:var(--danger); border:1.5px solid var(--danger); }
+        .btn-danger:hover:not(:disabled) { background:#fef5f2; }
+        .btn-sm { padding:6px 12px; font-size:0.8rem; }
+        .btn-xs { padding:3px 8px; font-size:0.7rem; border-radius:4px; }
+        .btn-accent { background:#fff; color:#8b6914; border:1.5px solid #d4b85c; }
+        .btn-accent:hover:not(:disabled) { background:#fffef7; }
+
+        .toggle-group { display:flex; gap:0; background:var(--border-light); border-radius:var(--radius-sm); padding:3px; width:fit-content; }
+        .toggle-btn { padding:8px 18px; border:none; background:transparent; cursor:pointer; border-radius:5px; font-size:0.85rem; font-weight:500; transition:var(--transition); font-family:var(--font); color:var(--text-secondary); }
+        .toggle-btn.active { background:#fff; color:var(--text); font-weight:600; box-shadow:var(--shadow-sm); }
+        .toggle-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+        .game-inputs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:12px; margin-top:12px; }
+        .game-input-box { background:var(--bg); border:1px solid var(--border-light); border-radius:var(--radius-sm); padding:10px; }
+        .game-input-box .game-label { font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px; }
+        .points-row { display:flex; gap:8px; align-items:center; }
+        .points-row input { width:60px; text-align:center; font-weight:600; }
+        .points-row span { color:var(--text-muted); font-weight:500; }
+
+        .table-wrap { overflow-x:auto; border-radius:var(--radius); border:1px solid var(--border); }
+        table { width:100%; border-collapse:collapse; font-size:0.9rem; background:var(--card); }
+        th { text-align:left; padding:12px 14px; font-size:0.73rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); background:#fafaf8; border-bottom:2px solid var(--border); }
+        td { padding:11px 14px; border-bottom:1px solid var(--border-light); vertical-align:middle; }
+        tr:last-child td { border-bottom:none; }
+        tr:hover td { background:#fdfdfb; }
+        .elo-change-positive { color:var(--success); font-weight:700; }
+        .elo-change-negative { color:var(--danger); font-weight:700; }
+        .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.73rem; font-weight:600; letter-spacing:0.2px; }
+        .badge-bo5 { background:#fef3e4; color:#b85c10; }
+        .badge-bo3 { background:#e8f0ea; color:#2b5c3b; }
+        .badge-single { background:#f0f0f0; color:#555; }
+        .badge-doubles { background:#eef2f9; color:#3a5a9f; }
+        .badge-shutout { background:#fff0e0; color:#c8502b; }
+        .badge-underdog { background:#fdf2e0; color:#b87820; }
+        .badge-streak { background:#ffe8e0; color:#c8402b; }
+
+        .rank-col { width:44px; text-align:center; font-weight:700; font-size:1.05rem; }
+        .rank-1 { color:var(--gold); } .rank-2 { color:var(--silver); } .rank-3 { color:var(--bronze); }
+        .player-name-cell { font-weight:600; }
+        .elo-cell { font-weight:700; font-size:1rem; font-variant-numeric:tabular-nums; font-family:'SF Mono','Consolas','Monaco',monospace; letter-spacing:-0.5px; }
+
+        .result-card { background:#fafff8; border:1.5px solid #c8e0cc; border-radius:var(--radius); padding:20px 24px; margin-top:20px; animation:fadeIn 0.3s ease; }
+        .result-card h3 { color:var(--success); margin-bottom:10px; font-size:1rem; }
+        .result-row { display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+        .bonus-tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(-8px);} to{opacity:1;transform:translateY(0);} }
+
+        .player-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:16px; }
+        .player-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow-sm); transition:var(--transition); position:relative; }
+        .player-card:hover { box-shadow:var(--shadow); }
+        .player-card-name { font-weight:700; font-size:1.05rem; margin-bottom:2px; }
+        .player-card-elo { font-size:1.8rem; font-weight:800; color:var(--primary); font-variant-numeric:tabular-nums; font-family:'SF Mono','Consolas','Monaco',monospace; letter-spacing:-1px; }
+        .player-card-stats { font-size:0.78rem; color:var(--text-secondary); margin-top:6px; display:flex; gap:14px; flex-wrap:wrap; }
+        .player-card-delete { position:absolute; top:10px; right:12px; background:none; border:none; cursor:pointer; font-size:1.1rem; color:#ccc; transition:var(--transition); padding:4px 8px; border-radius:4px; }
+        .player-card-delete:hover { color:var(--danger); background:#fef5f2; }
+
+        .empty-state { text-align:center; padding:40px 24px; color:var(--text-muted); }
+        .empty-state-icon { font-size:2.5rem; margin-bottom:10px; }
+        .empty-state p { margin-bottom:12px; font-size:0.9rem; }
+
+        .section-label { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin:18px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--border-light); }
+        .info-box { background:#fafcf9; border:1px solid #dce8dd; border-radius:var(--radius-sm); padding:14px 18px; font-size:0.8rem; color:#4a6b50; margin-top:16px; line-height:1.5; }
+        .info-box strong { color:var(--primary); }
+
+        .share-bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:12px 16px; background:#fefefc; border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:16px; }
+        .share-bar .label { font-weight:600; font-size:0.82rem; color:var(--text-secondary); white-space:nowrap; }
+        .copied-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1a1a1a; color:#fff; padding:10px 22px; border-radius:24px; font-size:0.85rem; font-weight:600; z-index:999; pointer-events:none; animation:toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards; }
+        @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(12px);} to{opacity:1;transform:translateX(-50%) translateY(0);} }
+        @keyframes toastOut { from{opacity:1;} to{opacity:0;transform:translateX(-50%) translateY(-12px);} }
+
+        @media (max-width:768px) {
+            .header-inner { height:auto; padding:10px 0; gap:8px; }
+            .nav-tabs button { padding:6px 10px; font-size:0.78rem; }
+            .card-row { flex-direction:column; gap:10px; }
+            .form-group { min-width:100%; }
+            .player-grid { grid-template-columns:1fr; }
+            .result-row { flex-direction:column; align-items:flex-start; gap:6px; }
+            .page-title { font-size:1.25rem; }
+            .player-card-elo { font-size:1.4rem; }
+            .welcome-card { padding:28px 20px; }
+            .game-inputs-grid { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header" id="appHeader" style="display:none;">
+        <div class="header-inner">
+            <div class="logo"><span class="logo-icon">S</span> Squash ELO</div>
+            <span class="group-badge" id="groupBadge">—</span>
+            <nav>
+                <ul class="nav-tabs" id="navTabs">
+                    <li><button data-page="players" class="active">Players</button></li>
+                    <li><button data-page="record" id="tabRecord">Record Match</button></li>
+                    <li><button data-page="history">History</button></li>
+                    <li><button data-page="leaderboard">Leaderboard</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <div class="view-banner" id="viewBanner" style="display:none;">👁️ <strong>View-Only Mode</strong> — You are viewing a shared snapshot. Changes are not saved.</div>
+
+    <main class="main" id="mainContent">
+
+        <section id="welcomeScreen" class="welcome-overlay">
+            <div class="welcome-card">
+                <h1>🏸 Squash ELO Tracker</h1>
+                <p class="sub">Create a new group or open an existing one.</p>
+                <div class="form-group"><label for="newGroupName">New Group Name</label><input type="text" id="newGroupName" placeholder="e.g. Friday Squash Club" maxlength="50" /></div>
+                <div class="form-group"><label for="newGroupSlug">Group Code <span style="font-weight:400;color:var(--text-muted);">(auto-generated)</span></label><input type="text" id="newGroupSlug" placeholder="friday-squash-club" maxlength="40" /></div>
+                <button class="btn btn-primary" id="btnCreateGroup" style="width:100%;">Create &amp; Enter Group</button>
+                <div class="existing-groups" id="existingGroupsSection" style="display:none;">
+                    <div class="section-label">Your Groups (this device)</div>
+                    <div id="existingGroupsList"></div>
+                </div>
+                <div style="margin-top:14px;font-size:0.78rem;color:var(--text-muted);">Or enter a shared view link in your browser.</div>
+            </div>
+        </section>
+
+        <section class="page" id="page-players" style="display:none;">
+            <h2 class="page-title">Players</h2>
+            <p class="page-subtitle">New players start at <strong>1000 ELO</strong>.</p>
+            <div class="card" id="addPlayerCard">
+                <div class="card-header">Add New Player</div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                    <div class="form-group" style="flex:2;min-width:180px;"><label for="newPlayerNameInput">Player Name</label><input type="text" id="newPlayerNameInput" placeholder="Enter name..." maxlength="40" /></div>
+                    <button class="btn btn-primary" id="btnAddPlayer">Add Player</button>
+                </div>
+            </div>
+            <div class="player-grid" id="playerGrid"></div>
+            <div class="empty-state" id="emptyPlayers" style="display:none;"><div class="empty-state-icon">🏸</div><p>No players yet.</p></div>
+        </section>
+
+        <section class="page" id="page-record" style="display:none;">
+            <h2 class="page-title">Record Match</h2>
+            <p class="page-subtitle">Log a completed match with per‑game points. ELO updates automatically.</p>
+            <div class="card">
+                <div class="card-header">Match Details</div>
+                <div class="section-label">Match Type</div>
+                <div class="toggle-group" id="matchTypeToggle" style="margin-bottom:16px;">
+                    <button class="toggle-btn active" data-type="singles">Singles</button>
+                    <button class="toggle-btn" data-type="doubles">Doubles</button>
+                </div>
+                <div class="section-label">Format</div>
+                <div class="toggle-group" id="formatToggle" style="margin-bottom:16px;">
+                    <button class="toggle-btn" data-format="bo5">Best of 5</button>
+                    <button class="toggle-btn active" data-format="bo3">Best of 3</button>
+                    <button class="toggle-btn" data-format="single">Single Game</button>
+                </div>
+
+                <div id="singlesForm">
+                    <div class="card-row">
+                        <div class="form-group"><label for="singlesPlayerA">Player A</label><select id="singlesPlayerA"><option value="">-- Select --</option></select></div>
+                        <div class="form-group"><label for="singlesPlayerB">Player B</label><select id="singlesPlayerB"><option value="">-- Select --</option></select></div>
+                    </div>
+                    <div id="singlesGameContainer" class="game-inputs-grid"></div>
+                </div>
+
+                <div id="doublesForm" style="display:none;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                        <div style="border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:12px;">
+                            <div class="section-label" style="margin-top:0;">Team A</div>
+                            <div class="card-row">
+                                <div class="form-group"><label for="doublesPlayerA1">Player A1</label><select id="doublesPlayerA1"><option value="">-- Select --</option></select></div>
+                                <div class="form-group"><label for="doublesPlayerA2">Player A2</label><select id="doublesPlayerA2"><option value="">-- Select --</option></select></div>
+                            </div>
+                        </div>
+                        <div style="border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:12px;">
+                            <div class="section-label" style="margin-top:0;">Team B</div>
+                            <div class="card-row">
+                                <div class="form-group"><label for="doublesPlayerB1">Player B1</label><select id="doublesPlayerB1"><option value="">-- Select --</option></select></div>
+                                <div class="form-group"><label for="doublesPlayerB2">Player B2</label><select id="doublesPlayerB2"><option value="">-- Select --</option></select></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="doublesGameContainer" class="game-inputs-grid" style="margin-top:14px;"></div>
+                </div>
+
+                <div class="card-row" style="margin-top:14px;">
+                    <div class="form-group" style="max-width:150px;"><label for="matchDate">Date</label><input type="date" id="matchDate" /></div>
+                </div>
+                <button class="btn btn-primary" id="btnRecordMatch" style="margin-top:16px;">Record Match &amp; Update ELO</button>
+                <div id="recordResult" style="margin-top:14px;"></div>
+            </div>
+            <div class="info-box">
+                <strong>7‑Nil Bonus:</strong> Each game the winner takes 7‑0 awards <strong>+15 ELO</strong>. Multiple 7‑nil games add linearly (e.g., two 7‑nils = +30).
+                <strong>Underdog Bonus:</strong> Winning against a higher‑rated team gives extra points.
+                <strong>Streak Bonus:</strong> Consecutive wins add +3 per streak win.
+                <strong>Format Impact:</strong> BO5 (K=40), BO3 (K=32), Single Game (K=20).
+            </div>
+        </section>
+
+        <section class="page" id="page-history" style="display:none;">
+            <h2 class="page-title">Match History</h2>
+            <p class="page-subtitle" id="historyCount">All recorded matches.</p>
+            <div class="table-wrap" id="historyTableWrap">
+                <table id="historyTable">
+                    <thead><tr><th>Date</th><th>Type</th><th>Format</th><th>Players / Teams</th><th>Game Scores</th><th>ELO Changes</th><th>Bonuses</th><th id="historyActionsCol"></th></tr></thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
+            <div class="empty-state" id="emptyHistory" style="display:none;"><div class="empty-state-icon">📋</div><p>No matches recorded yet.</p></div>
+        </section>
+
+        <section class="page" id="page-leaderboard" style="display:none;">
+            <h2 class="page-title">Leaderboard</h2>
+            <p class="page-subtitle">Players ranked by ELO.</p>
+            <div class="share-bar" id="shareBar">
+                <span class="label">🔗 Share:</span>
+                <button class="btn btn-accent btn-sm" id="btnCopyViewLink">Copy View-Only Link</button>
+                <button class="btn btn-outline btn-sm" id="btnCopyEditLink">Copy Edit Link</button>
+                <span style="font-size:0.72rem;color:var(--text-muted);">View links include a data snapshot.</span>
+            </div>
+            <div class="table-wrap" id="leaderboardTableWrap">
+                <table id="leaderboardTable">
+                    <thead><tr><th class="rank-col">#</th><th>Player</th><th>ELO</th><th>Matches</th><th>W-L</th><th>Win %</th><th>Streak</th></tr></thead>
+                    <tbody id="leaderboardBody"></tbody>
+                </table>
+            </div>
+            <div class="empty-state" id="emptyLeaderboard" style="display:none;"><div class="empty-state-icon">🏆</div><p>No players to rank.</p></div>
+            <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;" id="dataActionsRow">
+                <button class="btn btn-outline btn-sm" id="btnExport">Export JSON</button>
+                <button class="btn btn-outline btn-sm" id="btnImport">Import JSON</button>
+                <input type="file" id="importFile" accept=".json" style="display:none;" />
+                <button class="btn btn-danger btn-sm" id="btnReset" style="margin-left:auto;">Reset All Data</button>
+                <button class="btn btn-danger btn-sm" id="btnDeleteGroup">🗑️ Delete Group</button>
+                <button class="btn btn-outline btn-sm" id="btnSwitchGroup">← Switch Group</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        (function() {
+            const STATE = { groupSlug: null, groupName: null, isViewMode: false, dataFromURL: null, data: { players: [], matches: [] } };
+
+            function getURLParams() {
+                const p = new URLSearchParams(window.location.search);
+                return { group: p.get('group')||'', mode: p.get('mode')||'', data: p.get('data')||'' };
+            }
+            function buildURL(groupSlug, mode, encodedData) {
+                const base = window.location.origin + window.location.pathname;
+                const params = new URLSearchParams();
+                params.set('group', groupSlug);
+                if(mode) params.set('mode', mode);
+                if(encodedData) params.set('data', encodedData);
+                return base + '?' + params.toString();
+            }
+            function encodeDataForURL(dataObj) {
+                try { const json = JSON.stringify(dataObj); return encodeURIComponent(btoa(unescape(encodeURIComponent(json)))); } catch(e) { return null; }
+            }
+            function decodeDataFromURL(encoded) {
+                try { const json = decodeURIComponent(escape(atob(decodeURIComponent(encoded)))); return JSON.parse(json); } catch(e) { return null; }
+            }
+            function getStorageKey(slug) { return 'squash_elo_data_' + (slug||'default'); }
+            function loadDataFromStorage(slug) { const raw = localStorage.getItem(getStorageKey(slug)); if(raw) try { return JSON.parse(raw); } catch(e){} return { players:[], matches:[] }; }
+            function saveDataToStorage(slug, dataObj) { if(STATE.isViewMode && STATE.dataFromURL) return; localStorage.setItem(getStorageKey(slug), JSON.stringify(dataObj)); const metaKey='squash_elo_meta'; let meta={}; try{meta=JSON.parse(localStorage.getItem(metaKey)||'{}');}catch(e){} meta[slug]={name:STATE.groupName||slug,lastAccessed:new Date().toISOString(),playerCount:dataObj.players.length,matchCount:dataObj.matches.length}; localStorage.setItem(metaKey,JSON.stringify(meta)); }
+            function getStoredGroups() { const metaKey='squash_elo_meta'; let meta={}; try{meta=JSON.parse(localStorage.getItem(metaKey)||'{}');}catch(e){} return meta; }
+
+            function getPlayer(id) { return STATE.data.players.find(p=>p.id===id); }
+            function getPlayerByName(name) { return STATE.data.players.find(p=>p.name.toLowerCase()===name.toLowerCase()); }
+            function generateId() { return 'p_'+Date.now().toString(36)+'_'+Math.random().toString(36).substring(2,7); }
+            function generateMatchId() { return 'm_'+Date.now().toString(36)+'_'+Math.random().toString(36).substring(2,7); }
+
+            function getKFactor(format) { switch(format) { case 'bo5': return 40; case 'bo3': return 32; case 'single': return 20; default: return 32; } }
+            function expectedScore(playerElo, opponentElo) { return 1/(1+Math.pow(10,(opponentElo-playerElo)/400)); }
+            function calculateStreak(playerId, beforeMatchId=null) {
+                const playerMatches = STATE.data.matches.filter(m=>{ if(beforeMatchId&&m.id===beforeMatchId) return false; return [...(m.team_a||[]),...(m.team_b||[])].includes(playerId); }).sort((a,b)=>{ if(a.date!==b.date) return new Date(a.date)-new Date(b.date); return STATE.data.matches.indexOf(a)-STATE.data.matches.indexOf(b); });
+                let streak=0; for(let i=playerMatches.length-1;i>=0;i--) { const m=playerMatches[i]; const onA=(m.team_a||[]).includes(playerId); const onB=(m.team_b||[]).includes(playerId); if((onA&&m.winner==='a')||(onB&&m.winner==='b')) streak++; else break; } return streak;
+            }
+
+            function calculateEloChange(playerElo, opponentElo, format, isWinner, isUnderdog, streakCount, sevenNilCount) {
+                const K = getKFactor(format);
+                const expected = expectedScore(playerElo, opponentElo);
+                let change = K * ((isWinner?1:0) - expected);
+                if(isWinner && isUnderdog) { const diff = opponentElo - playerElo; change += Math.min(Math.round((diff/100)*5), 25); }
+                if(isWinner && streakCount>=2) change += streakCount*3;
+                if(isWinner) change += sevenNilCount * 15;
+                return Math.round(change);
+            }
+
+            function recordMatch(matchData) {
+                const match = {
+                    id: generateMatchId(), date: matchData.date, type: matchData.type, format: matchData.format,
+                    team_a: [...matchData.team_a], team_b: [...matchData.team_b],
+                    games: matchData.games.map(g=>({a:g.a, b:g.b})),
+                    score_a: matchData.score_a, score_b: matchData.score_b, winner: matchData.score_a > matchData.score_b ? 'a' : 'b',
+                    seven_nil_count: 0, elo_changes: {}, bonuses: {}
+                };
+                const teamAElo = match.team_a.reduce((s,pid)=>s+getPlayer(pid).elo,0)/match.team_a.length;
+                const teamBElo = match.team_b.reduce((s,pid)=>s+getPlayer(pid).elo,0)/match.team_b.length;
+                const winnerIsA = match.winner==='a';
+                const winnerTeam = winnerIsA ? match.team_a : match.team_b;
+                const loserTeam = winnerIsA ? match.team_b : match.team_a;
+                const winnerAvgElo = winnerIsA ? teamAElo : teamBElo;
+                const loserAvgElo = winnerIsA ? teamBElo : teamAElo;
+                const teamIsUnderdog = winnerAvgElo < loserAvgElo;
+                const allPlayers = [...match.team_a, ...match.team_b];
+                // count 7-nil games for the winning side
+                let sevenNilCount = 0;
+                for(const g of match.games) {
+                    const winnerSide = g.a > g.b ? 'a' : 'b';
+                    const winPts = winnerSide==='a' ? g.a : g.b;
+                    const losePts = winnerSide==='a' ? g.b : g.a;
+                    if(winPts===7 && losePts===0) sevenNilCount++;
+                }
+                match.seven_nil_count = sevenNilCount;
+
+                for(const pid of allPlayers) {
+                    const player = getPlayer(pid);
+                    const onWinnerTeam = winnerTeam.includes(pid);
+                    const opponentElo = onWinnerTeam ? (winnerIsA?teamBElo:teamAElo) : (winnerIsA?teamAElo:teamBElo);
+                    const playerIsUnderdog = onWinnerTeam && teamIsUnderdog;
+                    const streakCount = calculateStreak(pid);
+                    const change = calculateEloChange(player.elo, opponentElo, match.format, onWinnerTeam, playerIsUnderdog, streakCount, onWinnerTeam ? sevenNilCount : 0);
+                    match.elo_changes[pid] = onWinnerTeam ? change : calculateEloChange(player.elo, opponentElo, match.format, false, false, 0, 0);
+                    match.bonuses[pid] = {
+                        underdog: onWinnerTeam && playerIsUnderdog,
+                        streak: onWinnerTeam && streakCount>=2 ? streakCount : 0,
+                        seven_nil: onWinnerTeam ? sevenNilCount : 0
+                    };
+                }
+                for(const pid of allPlayers) {
+                    const p = getPlayer(pid); p.elo += match.elo_changes[pid]; p.matches_played = (p.matches_played||0)+1;
+                    if(match.elo_changes[pid]>0) p.wins=(p.wins||0)+1; else p.losses=(p.losses||0)+1;
+                }
+                STATE.data.matches.push(match);
+                saveDataToStorage(STATE.groupSlug, STATE.data);
+                return match;
+            }
+
+            function deleteMatch(matchId) {
+                const idx = STATE.data.matches.findIndex(m=>m.id===matchId); if(idx===-1) return false;
+                const match = STATE.data.matches[idx];
+                for(const [pid,change] of Object.entries(match.elo_changes)) { const p=getPlayer(pid); if(p) { p.elo-=change; p.matches_played=Math.max(0,(p.matches_played||1)-1); if(change>0) p.wins=Math.max(0,(p.wins||1)-1); else p.losses=Math.max(0,(p.losses||1)-1); } }
+                STATE.data.matches.splice(idx,1); saveDataToStorage(STATE.groupSlug, STATE.data); return true;
+            }
+
+            function recalculateAllElo() {
+                for(const p of STATE.data.players) { p.elo=1000; p.matches_played=0; p.wins=0; p.losses=0; }
+                const sorted = [...STATE.data.matches].sort((a,b)=>{ if(a.date!==b.date) return new Date(a.date)-new Date(b.date); return STATE.data.matches.indexOf(a)-STATE.data.matches.indexOf(b); });
+                STATE.data.matches = [];
+                for(const orig of sorted) {
+                    const m = {...orig, games: orig.games.map(g=>({...g})), elo_changes:{}, bonuses:{}};
+                    const teamAElo = m.team_a.reduce((s,pid)=>s+getPlayer(pid).elo,0)/m.team_a.length;
+                    const teamBElo = m.team_b.reduce((s,pid)=>s+getPlayer(pid).elo,0)/m.team_b.length;
+                    const winnerIsA = m.winner==='a';
+                    const winnerTeam = winnerIsA?m.team_a:m.team_b;
+                    const winnerAvgElo = winnerIsA?teamAElo:teamBElo;
+                    const loserAvgElo = winnerIsA?teamBElo:teamAElo;
+                    const teamIsUnderdog = winnerAvgElo < loserAvgElo;
+                    let sevenNilCount = 0;
+                    for(const g of m.games) { const ws = g.a>g.b?'a':'b'; if((ws==='a'?g.a:g.b)===7 && (ws==='a'?g.b:g.a)===0) sevenNilCount++; }
+                    m.seven_nil_count = sevenNilCount;
+                    const allPlayers = [...m.team_a, ...m.team_b];
+                    for(const pid of allPlayers) {
+                        const player = getPlayer(pid); const onWinner = winnerTeam.includes(pid);
+                        const oppElo = onWinner ? (winnerIsA?teamBElo:teamAElo) : (winnerIsA?teamAElo:teamBElo);
+                        const isUnderdog = onWinner && teamIsUnderdog;
+                        const streak = calculateStreak(pid);
+                        const change = calculateEloChange(player.elo, oppElo, m.format, onWinner, isUnderdog, streak, onWinner?sevenNilCount:0);
+                        m.elo_changes[pid] = onWinner ? change : calculateEloChange(player.elo, oppElo, m.format, false, false, 0, 0);
+                        m.bonuses[pid] = { underdog: onWinner&&isUnderdog, streak: onWinner&&streak>=2?streak:0, seven_nil: onWinner?sevenNilCount:0 };
+                    }
+                    for(const pid of allPlayers) { const p=getPlayer(pid); p.elo+=m.elo_changes[pid]; p.matches_played=(p.matches_played||0)+1; if(m.elo_changes[pid]>0) p.wins=(p.wins||0)+1; else p.losses=(p.losses||0)+1; }
+                    STATE.data.matches.push(m);
+                }
+                saveDataToStorage(STATE.groupSlug, STATE.data);
+            }
+
+            // ══════ RENDERING ══════
+            function escapeHTML(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+            function populatePlayerSelects() {
+                ['singlesPlayerA','singlesPlayerB','doublesPlayerA1','doublesPlayerA2','doublesPlayerB1','doublesPlayerB2'].forEach(sid=>{
+                    const sel=document.getElementById(sid); if(!sel) return; const cur=sel.value; sel.innerHTML='<option value="">-- Select --</option>';
+                    STATE.data.players.forEach(p=>{ sel.innerHTML+=`<option value="${p.id}" ${p.id===cur?'selected':''}>${escapeHTML(p.name)} (${p.elo})</option>`; });
+                });
+            }
+
+            function renderGameInputs() {
+                const format = document.querySelector('#formatToggle .toggle-btn.active').dataset.format;
+                const isDoubles = document.querySelector('#matchTypeToggle .toggle-btn.active').dataset.type === 'doubles';
+                const maxGames = format==='bo5'?5:(format==='bo3'?3:1);
+                const containerId = isDoubles ? 'doublesGameContainer' : 'singlesGameContainer';
+                const container = document.getElementById(containerId);
+                let html = '';
+                for(let i=1; i<=maxGames; i++) {
+                    html += `<div class="game-input-box">
+                        <div class="game-label">Game ${i}</div>
+                        <div class="points-row">
+                            <input type="number" id="game${i}_a" min="0" value="" placeholder="A" class="game-pts-a" />
+                            <span>–</span>
+                            <input type="number" id="game${i}_b" min="0" value="" placeholder="B" class="game-pts-b" />
+                        </div>
+                    </div>`;
+                }
+                container.innerHTML = html;
+            }
+
+            function renderPlayers() {
+                const grid = document.getElementById('playerGrid'); const empty = document.getElementById('emptyPlayers');
+                if(STATE.data.players.length===0) { grid.innerHTML=''; empty.style.display='block'; return; }
+                empty.style.display='none';
+                grid.innerHTML = STATE.data.players.map(p=>{
+                    const wr = p.matches_played>0?Math.round((p.wins/p.matches_played)*100):0;
+                    const streak = calculateStreak(p.id);
+                    const streakDisp = streak>=2?`<span style="color:#c8402b;">🔥 ${streak} win streak</span>`:streak===1?'<span style="color:#888;">1 win</span>':'';
+                    const delBtn = STATE.isViewMode?'':`<button class="player-card-delete" onclick="window._deletePlayer('${p.id}')">×</button>`;
+                    return `<div class="player-card">${delBtn}<div class="player-card-name">${escapeHTML(p.name)}</div><div class="player-card-elo">${p.elo}</div><div class="player-card-stats"><span>Matches: <strong>${p.matches_played}</strong></span><span>W: <strong>${p.wins}</strong> L: <strong>${p.losses}</strong></span><span>Win: <strong>${wr}%</strong></span>${streakDisp}</div></div>`;
+                }).join('');
+            }
+
+            function renderLeaderboard() {
+                const tbody=document.getElementById('leaderboardBody'); const empty=document.getElementById('emptyLeaderboard'); const wrap=document.getElementById('leaderboardTableWrap');
+                if(STATE.data.players.length===0) { tbody.innerHTML=''; empty.style.display='block'; wrap.style.display='none'; return; }
+                empty.style.display='none'; wrap.style.display='block';
+                const sorted=[...STATE.data.players].sort((a,b)=>b.elo-a.elo);
+                tbody.innerHTML=sorted.map((p,i)=>{
+                    const r=i+1, rc=r===1?'rank-1':r===2?'rank-2':r===3?'rank-3':'';
+                    const wr=p.matches_played>0?Math.round((p.wins/p.matches_played)*100):0;
+                    const streak=calculateStreak(p.id); const sd=streak>=2?`🔥 ${streak}`:streak===1?'1':'0';
+                    const medal=r===1?' 🥇':r===2?' 🥈':r===3?' 🥉':'';
+                    return `<tr><td class="rank-col ${rc}">${r}${medal}</td><td class="player-name-cell">${escapeHTML(p.name)}</td><td class="elo-cell">${p.elo}</td><td>${p.matches_played}</td><td>${p.wins}-${p.losses}</td><td>${wr}%</td><td>${sd}</td></tr>`;
+                }).join('');
+            }
+
+            function renderHistory() {
+                const tbody=document.getElementById('historyBody'); const empty=document.getElementById('emptyHistory'); const wrap=document.getElementById('historyTableWrap'); const countEl=document.getElementById('historyCount'); const actionsCol=document.getElementById('historyActionsCol');
+                if(STATE.isViewMode) actionsCol.style.display='none'; else actionsCol.style.display='';
+                if(STATE.data.matches.length===0) { tbody.innerHTML=''; empty.style.display='block'; wrap.style.display='none'; countEl.textContent='No matches recorded yet.'; return; }
+                empty.style.display='none'; wrap.style.display='block'; countEl.textContent=`${STATE.data.matches.length} match(es) recorded.`;
+                const sorted=[...STATE.data.matches].reverse();
+                tbody.innerHTML=sorted.map(m=>{
+                    const typeBadge=m.type==='doubles'?'<span class="badge badge-doubles">Doubles</span>':'<span class="badge badge-single" style="background:#f5f5f5;">Singles</span>';
+                    const fmtBadge=m.format==='bo5'?'<span class="badge badge-bo5">BO5</span>':m.format==='bo3'?'<span class="badge badge-bo3">BO3</span>':'<span class="badge badge-single">Single</span>';
+                    const teamA=m.team_a.map(pid=>getPlayer(pid)?.name||'?').join(' & '), teamB=m.team_b.map(pid=>getPlayer(pid)?.name||'?').join(' & ');
+                    const playersDisplay=`<strong>${escapeHTML(teamA)}</strong> vs <strong>${escapeHTML(teamB)}</strong>`;
+                    const gameScores = (m.games||[]).map(g=>`${g.a}-${g.b}`).join(', ') || '—';
+                    const eloChanges = Object.entries(m.elo_changes).map(([pid,ch])=>{ const nm=getPlayer(pid)?.name||'?'; const cls=ch>0?'elo-change-positive':'elo-change-negative'; return `<span class="${cls}">${escapeHTML(nm)}: ${ch>0?'+':''}${ch}</span>`; }).join('<br>');
+                    const bonusTags = [];
+                    for(const [pid,b] of Object.entries(m.bonuses||{})) { if(b.underdog) bonusTags.push('<span class="badge badge-underdog">🐶 Underdog</span>'); if(b.streak>0) bonusTags.push(`<span class="badge badge-streak">🔥 Streak x${b.streak}</span>`); if(b.seven_nil>0) bonusTags.push(`<span class="badge badge-shutout">💀 7‑Nil ×${b.seven_nil}</span>`); }
+                    const bonusDisp = [...new Set(bonusTags)].join(' ') || '—';
+                    const delBtn = STATE.isViewMode?'':`<button class="btn btn-danger btn-xs" onclick="window._deleteMatch('${m.id}')">Del</button>`;
+                    return `<tr><td>${m.date}</td><td>${typeBadge}</td><td>${fmtBadge}</td><td>${playersDisplay}</td><td>${gameScores}</td><td style="font-size:0.8rem;">${eloChanges}</td><td>${bonusDisp}</td><td>${delBtn}</td></tr>`;
+                }).join('');
+            }
+
+            function refreshAllUI() { populatePlayerSelects(); renderPlayers(); renderLeaderboard(); renderHistory(); updateShareBar(); }
+
+            function updateShareBar() {
+                const bar=document.getElementById('shareBar');
+                if(STATE.isViewMode) bar.innerHTML='<span style="font-size:0.82rem;color:var(--text-muted);">👁️ View-only snapshot</span>';
+                else { bar.innerHTML=`<span class="label">🔗 Share:</span><button class="btn btn-accent btn-sm" id="btnCopyViewLink">Copy View-Only Link</button><button class="btn btn-outline btn-sm" id="btnCopyEditLink">Copy Edit Link</button><span style="font-size:0.72rem;color:var(--text-muted);">View links include data snapshot.</span>`; document.getElementById('btnCopyViewLink').addEventListener('click',copyViewLink); document.getElementById('btnCopyEditLink').addEventListener('click',copyEditLink); }
+            }
+
+            function copyViewLink() { const enc=encodeDataForURL(STATE.data); if(!enc||enc.length>12000) { showToast('⚠️ Data too large for link. Export JSON instead.',true); return; } copyToClipboard(buildURL(STATE.groupSlug,'view',enc)); showToast('✅ View-only link copied!'); }
+            function copyEditLink() { copyToClipboard(buildURL(STATE.groupSlug,'','')); showToast('✅ Edit link copied!'); }
+            function copyToClipboard(text) { navigator.clipboard.writeText(text).catch(()=>{ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed';ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }); }
+            function showToast(msg,isWarn=false) { const old=document.querySelector('.copied-toast'); if(old) old.remove(); const t=document.createElement('div'); t.className='copied-toast'; t.textContent=msg; if(isWarn) t.style.background='#c8502b'; document.body.appendChild(t); setTimeout(()=>t.remove(),2100); }
+
+            function applyViewMode() {
+                if(STATE.isViewMode) {
+                    document.getElementById('viewBanner').style.display='block'; document.getElementById('addPlayerCard').style.display='none'; document.getElementById('tabRecord').style.display='none'; document.getElementById('dataActionsRow').style.display='none'; document.getElementById('shareBar').style.display='block';
+                    document.querySelectorAll('input, select, .toggle-btn, #btnAddPlayer, #btnRecordMatch').forEach(el=>{ if(!el.closest('#shareBar')&&!el.closest('#navTabs')&&!el.closest('#dataActionsRow')) el.disabled=true; });
+                } else {
+                    document.getElementById('viewBanner').style.display='none'; document.getElementById('addPlayerCard').style.display=''; document.getElementById('tabRecord').style.display=''; document.getElementById('dataActionsRow').style.display='';
+                    document.querySelectorAll('input, select, .toggle-btn, #btnAddPlayer, #btnRecordMatch').forEach(el=>el.disabled=false);
+                }
+            }
+
+            function switchPage(page) {
+                document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+                const target=document.getElementById('page-'+page); if(target) target.classList.add('active');
+                document.querySelectorAll('#navTabs button').forEach(b=>{ b.classList.remove('active'); if(b.dataset.page===page) b.classList.add('active'); });
+                if(page==='record' && STATE.isViewMode) { switchPage('leaderboard'); return; }
+                refreshAllUI();
+            }
+
+            function initApp() {
+                const params=getURLParams(); const slug=params.group, mode=params.mode, dataEnc=params.data;
+                if(!slug) { showWelcomeScreen(); return; }
+                STATE.groupSlug=slug; STATE.isViewMode=(mode==='view'); STATE.dataFromURL=null;
+                if(dataEnc) { const dec=decodeDataFromURL(dataEnc); if(dec&&dec.players&&dec.matches) { STATE.dataFromURL=dec; STATE.data=dec; STATE.isViewMode=true; } }
+                if(!STATE.dataFromURL) STATE.data=loadDataFromStorage(slug);
+                const meta=getStoredGroups(); STATE.groupName=(meta[slug]&&meta[slug].name)||slug;
+                document.getElementById('welcomeScreen').style.display='none'; document.getElementById('appHeader').style.display='';
+                document.querySelectorAll('.page').forEach(p=>p.style.display=''); document.getElementById('groupBadge').textContent=STATE.groupName;
+                document.getElementById('matchDate').value=new Date().toISOString().split('T')[0];
+                applyViewMode(); switchPage('players'); refreshAllUI(); attachAppListeners();
+            }
+
+            function showWelcomeScreen() {
+                document.getElementById('welcomeScreen').style.display='flex'; document.getElementById('appHeader').style.display='none';
+                document.querySelectorAll('.page').forEach(p=>p.style.display='none'); document.getElementById('viewBanner').style.display='none';
+                const meta=getStoredGroups(); const slugs=Object.keys(meta).sort((a,b)=>(meta[b].lastAccessed||'').localeCompare(meta[a].lastAccessed||''));
+                const section=document.getElementById('existingGroupsSection'), list=document.getElementById('existingGroupsList');
+                if(slugs.length>0) { section.style.display=''; list.innerHTML=slugs.map(s=>{ const gm=meta[s]; return `<div class="group-link-row" data-slug="${escapeHTML(s)}"><div><div class="gname">${escapeHTML(gm.name||s)}</div><div class="gmeta">${gm.playerCount||0} players · ${gm.matchCount||0} matches</div></div><button class="btn btn-outline btn-sm" data-action="open" data-slug="${escapeHTML(s)}">Open</button></div>`; }).join('');
+                    list.querySelectorAll('[data-action="open"]').forEach(btn=>btn.addEventListener('click',e=>{ e.stopPropagation(); window.location.href=buildURL(btn.dataset.slug,'',''); }));
+                } else section.style.display='none';
+                const nameInp=document.getElementById('newGroupName'), slugInp=document.getElementById('newGroupSlug');
+                nameInp.addEventListener('input',()=>{ if(!slugInp.dataset.manual) slugInp.value=nameInp.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').substring(0,40); });
+                slugInp.addEventListener('input',()=>slugInp.dataset.manual='true');
+                document.getElementById('btnCreateGroup').addEventListener('click',()=>{
+                    const name=nameInp.value.trim(); let s=slugInp.value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-|-$/g,'').substring(0,40);
+                    if(!name){alert('Enter a group name.');return;} if(!s){s=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').substring(0,40);} if(!s){alert('Enter a valid group code.');return;}
+                    localStorage.setItem(getStorageKey(s), JSON.stringify({players:[],matches:[]})); const meta2=getStoredGroups(); meta2[s]={name:name,lastAccessed:new Date().toISOString(),playerCount:0,matchCount:0}; localStorage.setItem('squash_elo_meta',JSON.stringify(meta2)); window.location.href=buildURL(s,'','');
+                });
+                [nameInp,slugInp].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('btnCreateGroup').click(); }));
+            }
+
+            function attachAppListeners() {
+                document.getElementById('navTabs').addEventListener('click',e=>{ if(e.target.tagName==='BUTTON'&&e.target.dataset.page) switchPage(e.target.dataset.page); });
+                document.getElementById('matchTypeToggle').addEventListener('click',e=>{ if(e.target.classList.contains('toggle-btn')&&!e.target.disabled){ document.querySelectorAll('#matchTypeToggle .toggle-btn').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); const isD=e.target.dataset.type==='doubles'; document.getElementById('singlesForm').style.display=isD?'none':'block'; document.getElementById('doublesForm').style.display=isD?'block':'none'; renderGameInputs(); document.getElementById('recordResult').innerHTML=''; }});
+                document.getElementById('formatToggle').addEventListener('click',e=>{ if(e.target.classList.contains('toggle-btn')&&!e.target.disabled){ document.querySelectorAll('#formatToggle .toggle-btn').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); renderGameInputs(); document.getElementById('recordResult').innerHTML=''; }});
+                document.getElementById('btnAddPlayer').addEventListener('click',()=>{ if(STATE.isViewMode) return; const n=document.getElementById('newPlayerNameInput').value.trim(); if(!n){alert('Enter a name.');return;} if(getPlayerByName(n)){alert('Name already exists.');return;} STATE.data.players.push({id:generateId(),name:n,elo:1000,matches_played:0,wins:0,losses:0}); saveDataToStorage(STATE.groupSlug,STATE.data); document.getElementById('newPlayerNameInput').value=''; refreshAllUI(); });
+                document.getElementById('newPlayerNameInput').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('btnAddPlayer').click(); });
+
+                document.getElementById('btnRecordMatch').addEventListener('click',()=>{
+                    if(STATE.isViewMode) return;
+                    const isDoubles = document.querySelector('#matchTypeToggle .toggle-btn.active').dataset.type==='doubles';
+                    const format = document.querySelector('#formatToggle .toggle-btn.active').dataset.format;
+                    const date = document.getElementById('matchDate').value || new Date().toISOString().split('T')[0];
+                    const resDiv = document.getElementById('recordResult');
+                    let team_a, team_b;
+                    if(!isDoubles) {
+                        const pa=document.getElementById('singlesPlayerA').value, pb=document.getElementById('singlesPlayerB').value;
+                        if(!pa||!pb){resDiv.innerHTML='<p style="color:#c8502b;">Select both players.</p>';return;} if(pa===pb){resDiv.innerHTML='<p style="color:#c8502b;">Cannot play against yourself.</p>';return;}
+                        team_a=[pa]; team_b=[pb];
+                    } else {
+                        const pa1=document.getElementById('doublesPlayerA1').value, pa2=document.getElementById('doublesPlayerA2').value, pb1=document.getElementById('doublesPlayerB1').value, pb2=document.getElementById('doublesPlayerB2').value;
+                        if(!pa1||!pa2||!pb1||!pb2){resDiv.innerHTML='<p style="color:#c8502b;">Select all four players.</p>';return;} if(new Set([pa1,pa2,pb1,pb2]).size!==4){resDiv.innerHTML='<p style="color:#c8502b;">Players must be unique.</p>';return;}
+                        team_a=[pa1,pa2]; team_b=[pb1,pb2];
+                    }
+                    const maxGames = format==='bo5'?5:(format==='bo3'?3:1);
+                    const winTarget = format==='bo5'?3:(format==='bo3'?2:1);
+                    const games = [];
+                    for(let i=1;i<=maxGames;i++) {
+                        const aVal = parseInt(document.getElementById(`game${i}_a`).value);
+                        const bVal = parseInt(document.getElementById(`game${i}_b`).value);
+                        if(isNaN(aVal) || isNaN(bVal)) { if(i<=winTarget){ resDiv.innerHTML='<p style="color:#c8502b;">Please fill all game scores. The match must have at least '+winTarget+' game(s).</p>'; return; } else break; }
+                        if(aVal<0||bVal<0){resDiv.innerHTML='<p style="color:#c8502b;">Points cannot be negative.</p>';return;}
+                        if(aVal===bVal){resDiv.innerHTML='<p style="color:#c8502b;">Game scores cannot be equal.</p>';return;}
+                        if(Math.max(aVal,bVal)<7){resDiv.innerHTML='<p style="color:#c8502b;">Each game must be won with at least 7 points.</p>';return;}
+                        games.push({a:aVal, b:bVal});
+                    }
+                    let scoreA=0, scoreB=0;
+                    for(const g of games) { if(g.a>g.b) scoreA++; else scoreB++; }
+                    if(scoreA!==winTarget && scoreB!==winTarget) { resDiv.innerHTML=`<p style="color:#c8502b;">Match winner must reach exactly ${winTarget} games. Current games: ${scoreA}-${scoreB}.</p>`; return; }
+                    if(scoreA===winTarget && scoreB>=winTarget) { resDiv.innerHTML='<p style="color:#c8502b;">Invalid game counts.</p>'; return; }
+                    const matchData = { date, type: isDoubles?'doubles':'singles', format, team_a, team_b, games, score_a:scoreA, score_b:scoreB };
+                    const match = recordMatch(matchData);
+                    refreshAllUI();
+                    const winnerTeam = match.winner==='a'?team_a:team_b;
+                    const winnerNames = winnerTeam.map(pid=>getPlayer(pid)?.name||'?').join(' & ');
+                    const changesHTML = Object.entries(match.elo_changes).map(([pid,ch])=>{ const nm=getPlayer(pid)?.name||'?'; const cls=ch>0?'elo-change-positive':'elo-change-negative'; return `<span class="${cls}" style="font-weight:700;">${escapeHTML(nm)}: ${ch>0?'+':''}${ch}</span>`; }).join(' &nbsp;|&nbsp; ');
+                    const bonusList = [];
+                    for(const [pid,b] of Object.entries(match.bonuses||{})) { if(b.underdog) bonusList.push('🐶 Underdog'); if(b.streak>0) bonusList.push(`🔥 Streak x${b.streak}`); if(b.seven_nil>0) bonusList.push(`💀 7‑Nil ×${b.seven_nil}`); }
+                    resDiv.innerHTML = `<div class="result-card"><h3>✅ Match Recorded — ${escapeHTML(winnerNames)} wins!</h3><div class="result-row"><span><strong>Score:</strong> ${scoreA}-${scoreB} games</span></div><div style="margin-top:10px;font-size:0.9rem;">${changesHTML}</div>${bonusList.length?`<div class="bonus-tags">${bonusList.map(b=>`<span class="badge" style="background:#fff8e8;">${b}</span>`).join(' ')}</div>`:''}</div>`;
+                });
+
+                window._deletePlayer = function(pid) { if(STATE.isViewMode) return; const p=getPlayer(pid); if(!p) return; if(!confirm(`Delete "${p.name}" and all their matches?`)) return; STATE.data.players=STATE.data.players.filter(x=>x.id!==pid); STATE.data.matches=STATE.data.matches.filter(m=>![...m.team_a,...m.team_b].includes(pid)); recalculateAllElo(); refreshAllUI(); };
+                window._deleteMatch = function(mid) { if(STATE.isViewMode) return; if(!confirm('Delete match and reverse ELO?')) return; if(deleteMatch(mid)) refreshAllUI(); };
+
+                document.getElementById('btnExport').addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(STATE.data,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`squash-elo-${STATE.groupSlug}.json`; a.click(); });
+                document.getElementById('btnImport').addEventListener('click',()=>{ if(STATE.isViewMode) return; document.getElementById('importFile').click(); });
+                document.getElementById('importFile').addEventListener('change',function(e){ if(STATE.isViewMode) return; const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{ try{ const imp=JSON.parse(ev.target.result); if(!imp.players||!imp.matches) throw new Error('Invalid'); if(!confirm(`Import ${imp.players.length} players and ${imp.matches.length} matches?`)) return; STATE.data=imp; recalculateAllElo(); saveDataToStorage(STATE.groupSlug,STATE.data); refreshAllUI(); }catch(err){alert('Invalid file.');} }; r.readAsText(f); e.target.value=''; });
+                document.getElementById('btnReset').addEventListener('click',()=>{ if(STATE.isViewMode) return; if(confirm('⚠️ Delete all players and matches?')){ if(confirm('Final confirmation?')){ STATE.data={players:[],matches:[]}; saveDataToStorage(STATE.groupSlug,STATE.data); refreshAllUI(); document.getElementById('recordResult').innerHTML=''; }}});
+
+                // Delete group
+                document.getElementById('btnDeleteGroup').addEventListener('click', function() {
+                    if(STATE.isViewMode) return;
+                    if(!confirm(`⚠️ Permanently delete the group "${STATE.groupName}" and all its data? This cannot be undone.`)) return;
+                    localStorage.removeItem(getStorageKey(STATE.groupSlug));
+                    const metaKey = 'squash_elo_meta';
+                    let meta = {};
+                    try { meta = JSON.parse(localStorage.getItem(metaKey) || '{}'); } catch(e) {}
+                    delete meta[STATE.groupSlug];
+                    localStorage.setItem(metaKey, JSON.stringify(meta));
+                    window.location.href = window.location.origin + window.location.pathname;
+                });
+
+                document.getElementById('btnSwitchGroup').addEventListener('click',()=>{ window.location.href=window.location.origin+window.location.pathname; });
+                updateShareBar();
+                renderGameInputs();
+            }
+
+            initApp();
+        })();
+    </script>
+</body>
+</html>
