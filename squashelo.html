@@ -383,7 +383,6 @@
                 const loserAvgElo = winnerIsA ? teamBElo : teamAElo;
                 const teamIsUnderdog = winnerAvgElo < loserAvgElo;
                 const allPlayers = [...match.team_a, ...match.team_b];
-                // count 7-nil games for the winning side
                 let sevenNilCount = 0;
                 for(const g of match.games) {
                     const winnerSide = g.a > g.b ? 'a' : 'b';
@@ -469,15 +468,16 @@
                 const isDoubles = document.querySelector('#matchTypeToggle .toggle-btn.active').dataset.type === 'doubles';
                 const maxGames = format==='bo5'?5:(format==='bo3'?3:1);
                 const containerId = isDoubles ? 'doublesGameContainer' : 'singlesGameContainer';
+                const prefix = isDoubles ? 'doubles' : 'singles';
                 const container = document.getElementById(containerId);
                 let html = '';
                 for(let i=1; i<=maxGames; i++) {
                     html += `<div class="game-input-box">
                         <div class="game-label">Game ${i}</div>
                         <div class="points-row">
-                            <input type="number" id="game${i}_a" min="0" value="" placeholder="A" class="game-pts-a" />
+                            <input type="number" id="${prefix}_game${i}_a" min="0" value="" placeholder="A" class="game-pts-a" />
                             <span>–</span>
-                            <input type="number" id="game${i}_b" min="0" value="" placeholder="B" class="game-pts-b" />
+                            <input type="number" id="${prefix}_game${i}_b" min="0" value="" placeholder="B" class="game-pts-b" />
                         </div>
                     </div>`;
                 }
@@ -608,6 +608,7 @@
                     const format = document.querySelector('#formatToggle .toggle-btn.active').dataset.format;
                     const date = document.getElementById('matchDate').value || new Date().toISOString().split('T')[0];
                     const resDiv = document.getElementById('recordResult');
+                    const prefix = isDoubles ? 'doubles' : 'singles';
                     let team_a, team_b;
                     if(!isDoubles) {
                         const pa=document.getElementById('singlesPlayerA').value, pb=document.getElementById('singlesPlayerB').value;
@@ -622,9 +623,14 @@
                     const winTarget = format==='bo5'?3:(format==='bo3'?2:1);
                     const games = [];
                     for(let i=1;i<=maxGames;i++) {
-                        const aVal = parseInt(document.getElementById(`game${i}_a`).value);
-                        const bVal = parseInt(document.getElementById(`game${i}_b`).value);
-                        if(isNaN(aVal) || isNaN(bVal)) { if(i<=winTarget){ resDiv.innerHTML='<p style="color:#c8502b;">Please fill all game scores. The match must have at least '+winTarget+' game(s).</p>'; return; } else break; }
+                        const aEl = document.getElementById(`${prefix}_game${i}_a`);
+                        const bEl = document.getElementById(`${prefix}_game${i}_b`);
+                        const aVal = parseInt(aEl?.value);
+                        const bVal = parseInt(bEl?.value);
+                        if(isNaN(aVal) || isNaN(bVal)) {
+                            if(i<=winTarget){ resDiv.innerHTML=`<p style="color:#c8502b;">Please fill all game scores. The match must have at least ${winTarget} game(s).</p>`; return; }
+                            else break;
+                        }
                         if(aVal<0||bVal<0){resDiv.innerHTML='<p style="color:#c8502b;">Points cannot be negative.</p>';return;}
                         if(aVal===bVal){resDiv.innerHTML='<p style="color:#c8502b;">Game scores cannot be equal.</p>';return;}
                         if(Math.max(aVal,bVal)<7){resDiv.innerHTML='<p style="color:#c8502b;">Each game must be won with at least 7 points.</p>';return;}
@@ -652,8 +658,6 @@
                 document.getElementById('btnImport').addEventListener('click',()=>{ if(STATE.isViewMode) return; document.getElementById('importFile').click(); });
                 document.getElementById('importFile').addEventListener('change',function(e){ if(STATE.isViewMode) return; const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{ try{ const imp=JSON.parse(ev.target.result); if(!imp.players||!imp.matches) throw new Error('Invalid'); if(!confirm(`Import ${imp.players.length} players and ${imp.matches.length} matches?`)) return; STATE.data=imp; recalculateAllElo(); saveDataToStorage(STATE.groupSlug,STATE.data); refreshAllUI(); }catch(err){alert('Invalid file.');} }; r.readAsText(f); e.target.value=''; });
                 document.getElementById('btnReset').addEventListener('click',()=>{ if(STATE.isViewMode) return; if(confirm('⚠️ Delete all players and matches?')){ if(confirm('Final confirmation?')){ STATE.data={players:[],matches:[]}; saveDataToStorage(STATE.groupSlug,STATE.data); refreshAllUI(); document.getElementById('recordResult').innerHTML=''; }}});
-
-                // Delete group
                 document.getElementById('btnDeleteGroup').addEventListener('click', function() {
                     if(STATE.isViewMode) return;
                     if(!confirm(`⚠️ Permanently delete the group "${STATE.groupName}" and all its data? This cannot be undone.`)) return;
@@ -665,7 +669,6 @@
                     localStorage.setItem(metaKey, JSON.stringify(meta));
                     window.location.href = window.location.origin + window.location.pathname;
                 });
-
                 document.getElementById('btnSwitchGroup').addEventListener('click',()=>{ window.location.href=window.location.origin+window.location.pathname; });
                 updateShareBar();
                 renderGameInputs();
