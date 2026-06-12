@@ -516,12 +516,58 @@ let activeStatTab='highlights';
 let activeH2HType='all';
 
 /* ═══════════════════════════════════════
-   COMPRESSION
+   COMPRESSION  (deflate-raw + URL-safe base64)
+   Data travels in the URL *fragment* (#d=…)
+   so Netlify / any static host never touches it.
 ═══════════════════════════════════════ */
-function lzwEnc(s){const d=new Map();let data=s.split(''),out=[],ph=data[0],code=256;for(let i=1;i<data.length;i++){const c=data[i];if(d.has(ph+c))ph+=c;else{out.push(ph.length>1?d.get(ph):ph.charCodeAt(0));d.set(ph+c,code++);ph=c;}}out.push(ph.length>1?d.get(ph):ph.charCodeAt(0));return out.map(c=>String.fromCharCode(c)).join('');}
-function lzwDec(s){const d=new Map();let data=s.split('').map(c=>c.charCodeAt(0)),out='',code=256;let ph=String.fromCharCode(data[0]);out+=ph;for(let i=1;i<data.length;i++){const c=data[i];const e=c<256?String.fromCharCode(c):(d.get(c)||(ph+ph[0]));out+=e;d.set(code++,ph+e[0]);ph=e;}return out;}
-const compress=d=>btoa(lzwEnc(JSON.stringify(d)));
-const decompress=e=>JSON.parse(lzwDec(atob(e)));
+
+// URL-safe base64 — no +, /, or padding = in the output
+function b64e(bin){return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
+function b64d(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return atob(s);}
+
+// Safe bytes↔binary-string helpers (avoid stack overflow on large arrays)
+function bytes2bin(u8){const C=0x8000;let s='';for(let i=0;i<u8.length;i+=C)s+=String.fromCharCode.apply(null,u8.subarray(i,i+C));return s;}
+function bin2bytes(s){const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b;}
+
+/**
+ * compressData(obj) → Promise<string>
+ *   Tries deflate-raw (CompressionStream, widely available).
+ *   Falls back to plain UTF-8 base64 if unavailable.
+ *   Prefix: 'z:' = deflate, 'p:' = plain.
+ */
+async function compressData(obj){
+  const json=JSON.stringify(obj);
+  if(typeof CompressionStream!=='undefined'){
+    try{
+      const cs=new CompressionStream('deflate-raw');
+      const w=cs.writable.getWriter();
+      w.write(new TextEncoder().encode(json));
+      w.close();
+      const buf=await new Response(cs.readable).arrayBuffer();
+      return 'z:'+b64e(bytes2bin(new Uint8Array(buf)));
+    }catch(e){/* fall through */}
+  }
+  // Fallback: UTF-8 bytes → URL-safe base64 (no compression but always works)
+  return 'p:'+b64e(bytes2bin(new TextEncoder().encode(json)));
+}
+
+/**
+ * decompressData(str) → Promise<object>
+ */
+async function decompressData(encoded){
+  if(!encoded)throw new Error('empty');
+  if(encoded.startsWith('z:')){
+    const bytes=bin2bytes(b64d(encoded.slice(2)));
+    const ds=new DecompressionStream('deflate-raw');
+    const w=ds.writable.getWriter();
+    w.write(bytes); w.close();
+    return JSON.parse(await new Response(ds.readable).text());
+  }
+  if(encoded.startsWith('p:')){
+    return JSON.parse(new TextDecoder().decode(bin2bytes(b64d(encoded.slice(2)))));
+  }
+  throw new Error('Unknown encoding format');
+}
 
 /* ═══════════════════════════════════════
    STATE
@@ -531,8 +577,21 @@ const S={slug:null,name:null,viewMode:false,urlData:null,data:{players:[],matche
 /* ═══════════════════════════════════════
    STORAGE / URL
 ═══════════════════════════════════════ */
-function urlParams(){const p=new URLSearchParams(location.search);return{group:p.get('group')||'',mode:p.get('mode')||'',data:p.get('data')||''};}
-function buildURL(slug,mode,enc){const p=new URLSearchParams();p.set('group',slug);if(mode)p.set('mode',mode);if(enc)p.set('data',enc);return`${location.origin}${location.pathname}?${p}`;}
+function urlParams(){
+  const p=new URLSearchParams(location.search);
+  // Data lives in the fragment so static hosts (Netlify etc.) never see or mangle it
+  const h=location.hash;
+  let data='';
+  if(h.startsWith('#d='))data=h.slice(3);
+  return{group:p.get('group')||'',mode:p.get('mode')||'',data};
+}
+function buildURL(slug,mode,enc){
+  const p=new URLSearchParams();
+  p.set('group',slug);
+  if(mode)p.set('mode',mode);
+  const base=`${location.origin}${location.pathname}?${p}`;
+  return enc?`${base}#d=${enc}`:base;
+}
 function storeKey(slug){return'sq_elo_'+slug;}
 function loadStore(slug){const r=localStorage.getItem(storeKey(slug));if(r)try{return JSON.parse(r);}catch(e){}return{players:[],matches:[]};}
 function persist(slug,data){if(S.viewMode&&S.urlData)return;localStorage.setItem(storeKey(slug),JSON.stringify(data));let meta={};try{meta=JSON.parse(localStorage.getItem('sq_elo_meta')||'{}');}catch(e){}meta[slug]={name:S.name||slug,lastAccessed:new Date().toISOString(),playerCount:data.players.length,matchCount:data.matches.length};localStorage.setItem('sq_elo_meta',JSON.stringify(meta));}
@@ -1072,12 +1131,33 @@ function updateShare(){
   bar.innerHTML=`<span class="share-lbl">🔗 Share:</span>
     <button class="btn btn-warn btn-sm" id="btnViewLink">Copy View-Only Link</button>
     <button class="btn btn-o btn-sm" id="btnEditLink">Copy Edit Link</button>
-    <span style="font-size:.69rem;color:var(--text-3)">Edit link includes full data; changes stay local.</span>`;
-  document.getElementById('btnViewLink').addEventListener('click',()=>{try{copyClip(buildURL(S.slug,'view',compress(S.data)));toast('✅ View-only link copied!');}catch(e){toast('⚠️ Could not compress.');}});
-  document.getElementById('btnEditLink').addEventListener('click',()=>{try{copyClip(buildURL(S.slug,'edit',compress(S.data)));toast('✅ Edit link copied!');}catch(e){toast('⚠️ Could not compress.');}});
+    <span style="font-size:.69rem;color:var(--text-3)">Compressed fragment link — works on Netlify &amp; any host.</span>`;
+
+  async function genLink(mode){
+    const btnId=mode==='view'?'btnViewLink':'btnEditLink';
+    const btn=document.getElementById(btnId);
+    if(!btn)return;
+    const orig=btn.textContent;
+    btn.disabled=true;btn.textContent='⏳ Compressing…';
+    try{
+      const enc=await compressData(S.data);
+      const url=buildURL(S.slug,mode,enc);
+      await copyClip(url);
+      const kb=Math.round(enc.length/102.4)/10;
+      toast(`✅ ${mode==='view'?'View-only':'Edit'} link copied! (${kb} KB)`);
+    }catch(e){
+      console.error('Link gen failed:',e);
+      toast('⚠️ Could not generate link.');
+    }finally{btn.disabled=false;btn.textContent=orig;}
+  }
+  document.getElementById('btnViewLink').addEventListener('click',()=>genLink('view'));
+  document.getElementById('btnEditLink').addEventListener('click',()=>genLink('edit'));
 }
 
-function copyClip(t){navigator.clipboard.writeText(t).catch(()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;left:-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);});}
+function copyClip(t){
+  if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t);
+  return new Promise(res=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;left:-9999px;top:-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);res();});
+}
 function toast(msg){const old=document.querySelector('.toast');if(old)old.remove();const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2400);}
 
 function applyViewMode(){
@@ -1096,18 +1176,23 @@ function switchPage(pg){
 }
 
 /* ═══════════════════════════════════════
-   INIT
+   INIT  (async — awaits URL decompression)
 ═══════════════════════════════════════ */
-function init(){
+async function init(){
   const{group:slug,mode,data:enc}=urlParams();
   if(!slug){showWelcome();return;}
   S.slug=slug;S.viewMode=mode==='view';S.urlData=null;
-  if(enc){try{const d=decompress(enc);if(d?.players&&d?.matches){S.urlData=d;S.data=d;}}catch(e){}}
+  if(enc){
+    try{
+      const d=await decompressData(enc);
+      if(d?.players&&d?.matches){S.urlData=d;S.data=d;}
+    }catch(e){console.warn('URL data decode failed:',e);}
+  }
   if(!S.urlData)S.data=loadStore(slug);
   else if(!S.viewMode)persist(slug,S.data);
-  // ── MIGRATION: add separate ELO fields if missing
+  // migrate old single-ELO data to separate singles/doubles ELO
   const needsMig=S.data.players.some(p=>p.elo_s===undefined);
-  if(needsMig){recalcAll();if(S.data.matches.length>0)setTimeout(()=>toast('✨ Upgraded to separate Singles & Doubles ELO!'),600);}
+  if(needsMig){recalcAll();if(S.data.matches.length>0)setTimeout(()=>toast('\u2728 Upgraded to separate Singles & Doubles ELO!'),600);}
   const meta=getGroups();S.name=(meta[slug]?.name)||slug;
   document.getElementById('welcomeScr').style.display='none';
   document.getElementById('appHdr').style.display='';
@@ -1125,7 +1210,7 @@ function showWelcome(){
   const meta=getGroups();
   const slugs=Object.keys(meta).sort((a,b)=>(meta[b].lastAccessed||'').localeCompare(meta[a].lastAccessed||''));
   const sec=document.getElementById('existingSec'),list=document.getElementById('existingList');
-  if(slugs.length){sec.style.display='';list.innerHTML=slugs.map(s=>{const g=meta[s];return`<div class="grp-row"><div><div class="grp-row-name">${esc(g.name||s)}</div><div class="grp-row-meta">${g.playerCount||0} players · ${g.matchCount||0} matches</div></div><button class="btn btn-o btn-sm" data-sl="${esc(s)}">Open →</button></div>`;}).join('');list.querySelectorAll('[data-sl]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();location.href=buildURL(b.dataset.sl,'','');}));}
+  if(slugs.length){sec.style.display='';list.innerHTML=slugs.map(s=>{const g=meta[s];return`<div class="grp-row"><div><div class="grp-row-name">${esc(g.name||s)}</div><div class="grp-row-meta">${g.playerCount||0} players \u00b7 ${g.matchCount||0} matches</div></div><button class="btn btn-o btn-sm" data-sl="${esc(s)}">Open \u2192</button></div>`;}).join('');list.querySelectorAll('[data-sl]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();location.href=buildURL(b.dataset.sl,'','');}));}
   else sec.style.display='none';
   const ni=document.getElementById('newName'),si=document.getElementById('newSlug');
   ni.addEventListener('input',()=>{if(!si.dataset.m)si.value=ni.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);});
@@ -1202,7 +1287,7 @@ function attachListeners(){
       games.push({a:av,b:bv});
     }
     let sa=0,sb=0;for(const g of games){if(g.a>g.b)sa++;else sb++;}
-    if(sa!==winT&&sb!==winT){res.innerHTML=`<p style="color:var(--danger);margin-top:10px">Winner must reach ${winT} game win${winT>1?'s':''}. Current: ${sa}–${sb}.</p>`;return;}
+    if(sa!==winT&&sb!==winT){res.innerHTML=`<p style="color:var(--danger);margin-top:10px">Winner must reach ${winT} game win${winT>1?'s':''}. Current: ${sa}\u2013${sb}.</p>`;return;}
     const match=recordMatch({date,type:isDbl?'doubles':'singles',format:fmt,team_a,team_b,games,score_a:sa,score_b:sb});
     refreshAll();
     const wTeam=match.winner==='a'?team_a:team_b;
@@ -1210,14 +1295,14 @@ function attachListeners(){
     const wPts=match.winner==='a'?match.total_pts.a:match.total_pts.b,lPts=match.winner==='a'?match.total_pts.b:match.total_pts.a;
     const chips=Object.entries(match.elo_changes).map(([pid,ch])=>{const nm=getP(pid)?.name||'?';return`<div class="elo-chip ${ch>0?'elo-win':'elo-lose'}">${esc(nm)}: ${ch>0?'+':''}${ch}</div>`;}).join('');
     const bonusList=[];const seen=new Set();
-    for(const[,b] of Object.entries(match.bonuses||{})){if(b.underdog&&!seen.has('ud')){bonusList.push('🐶 Underdog');seen.add('ud');}if(b.streak>0&&!seen.has('s'+b.streak)){bonusList.push(`🔥 Streak ×${b.streak}`);seen.add('s'+b.streak);}if(b.seven_nil>0&&!seen.has('n'+b.seven_nil)){bonusList.push(`💀 7-Nil ×${b.seven_nil} (+${b.seven_nil*15})`);seen.add('n'+b.seven_nil);}}
-    if(match.point_diff_bonus>0)bonusList.push(`📊 Point diff +${match.point_diff_bonus}`);
+    for(const[,b] of Object.entries(match.bonuses||{})){if(b.underdog&&!seen.has('ud')){bonusList.push('\U0001f436 Underdog');seen.add('ud');}if(b.streak>0&&!seen.has('s'+b.streak)){bonusList.push(`\U0001f525 Streak \xd7${b.streak}`);seen.add('s'+b.streak);}if(b.seven_nil>0&&!seen.has('n'+b.seven_nil)){bonusList.push(`\U0001f480 7-Nil \xd7${b.seven_nil} (+${b.seven_nil*15})`);seen.add('n'+b.seven_nil);}}
+    if(match.point_diff_bonus>0)bonusList.push(`\U0001f4ca Point diff +${match.point_diff_bonus}`);
     const typeLabel=isDbl?'Doubles':'Singles';
     res.innerHTML=`<div class="res-card">
-      <div class="res-title">✅ ${esc(wNames)} wins! <span style="font-size:.8rem;font-weight:500;color:var(--text-2)">(${typeLabel})</span></div>
+      <div class="res-title">\u2705 ${esc(wNames)} wins! <span style="font-size:.8rem;font-weight:500;color:var(--text-2)">(${typeLabel})</span></div>
       <div class="res-meta">
-        <div class="res-mi"><div class="res-mlbl">Games</div><strong>${match.score_a}–${match.score_b}</strong></div>
-        <div class="res-mi"><div class="res-mlbl">Points</div><strong>${wPts}–${lPts}</strong></div>
+        <div class="res-mi"><div class="res-mlbl">Games</div><strong>${match.score_a}\u2013${match.score_b}</strong></div>
+        <div class="res-mi"><div class="res-mlbl">Points</div><strong>${wPts}\u2013${lPts}</strong></div>
         ${match.point_diff_bonus>0?`<div class="res-mi"><div class="res-mlbl">Diff Bonus</div><strong style="color:var(--court-mid)">+${match.point_diff_bonus}</strong></div>`:''}
       </div>
       <div style="font-size:.7rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">${typeLabel} ELO Changes</div>
@@ -1228,18 +1313,14 @@ function attachListeners(){
 
   // stats sub-tabs
   document.querySelectorAll('.stat-tab').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('.stat-tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
-      activeStatTab=btn.dataset.st;renderStats();
-    });
+    btn.addEventListener('click',()=>{document.querySelectorAll('.stat-tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');activeStatTab=btn.dataset.st;renderStats();});
   });
 
   // chart type toggle
   document.getElementById('chartTypeToggle').addEventListener('click',e=>{
     if(!e.target.classList.contains('tgl-btn'))return;
     document.querySelectorAll('#chartTypeToggle .tgl-btn').forEach(b=>b.classList.remove('on'));e.target.classList.add('on');
-    chartState.type=e.target.dataset.ct;
-    drawEloChart('eloChartSvg',chartState.pids,chartState.type);
+    chartState.type=e.target.dataset.ct;drawEloChart('eloChartSvg',chartState.pids,chartState.type);
   });
 
   // H2H type toggle
@@ -1259,7 +1340,8 @@ function attachListeners(){
   window._delPlayer=function(pid){
     if(S.viewMode)return;const p=getP(pid);if(!p)return;
     if(!confirm(`Remove "${p.name}" and all their matches?`))return;
-    S.data.players=S.data.players.filter(x=>x.id!==pid);S.data.matches=S.data.matches.filter(m=>![...m.team_a,...m.team_b].includes(pid));
+    S.data.players=S.data.players.filter(x=>x.id!==pid);
+    S.data.matches=S.data.matches.filter(m=>![...m.team_a,...m.team_b].includes(pid));
     recalcAll();refreshAll();
   };
   window._delMatch=function(mid){
@@ -1268,19 +1350,28 @@ function attachListeners(){
 
   // export/import/reset
   document.getElementById('btnExport').addEventListener('click',()=>{
-    const b=new Blob([JSON.stringify(S.data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`squash-elo-${S.slug}.json`;a.click();
+    const b=new Blob([JSON.stringify(S.data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`squash-elo-${S.slug}.json`;a.click();
   });
   document.getElementById('btnImport').addEventListener('click',()=>{if(!S.viewMode)document.getElementById('importFile').click();});
   document.getElementById('importFile').addEventListener('change',function(e){
     if(S.viewMode)return;const f=e.target.files[0];if(!f)return;
-    const r=new FileReader();r.onload=ev=>{try{const imp=JSON.parse(ev.target.result);if(!imp.players||!imp.matches)throw 0;if(!confirm(`Import ${imp.players.length} players & ${imp.matches.length} matches? Replaces current data.`))return;S.data=imp;recalcAll();persist(S.slug,S.data);refreshAll();}catch(err){alert('Invalid file.');}};r.readAsText(f);e.target.value='';
+    const r=new FileReader();r.onload=ev=>{
+      try{const imp=JSON.parse(ev.target.result);if(!imp.players||!imp.matches)throw 0;
+      if(!confirm(`Import ${imp.players.length} players & ${imp.matches.length} matches? Replaces current data.`))return;
+      S.data=imp;recalcAll();persist(S.slug,S.data);refreshAll();}catch(err){alert('Invalid file.');}
+    };r.readAsText(f);e.target.value='';
   });
   document.getElementById('btnReset').addEventListener('click',()=>{
-    if(S.viewMode)return;if(confirm('Delete ALL players and matches?')&&confirm('Final confirmation — cannot be undone.')){S.data={players:[],matches:[]};persist(S.slug,S.data);refreshAll();document.getElementById('recordResult').innerHTML='';}
+    if(S.viewMode)return;
+    if(confirm('Delete ALL players and matches?')&&confirm('Final confirmation \u2014 cannot be undone.')){
+      S.data={players:[],matches:[]};persist(S.slug,S.data);refreshAll();document.getElementById('recordResult').innerHTML='';
+    }
   });
   document.getElementById('btnDelGroup').addEventListener('click',()=>{
     if(S.viewMode)return;if(!confirm(`Delete group "${S.name}" permanently?`))return;
-    localStorage.removeItem(storeKey(S.slug));const m=getGroups();delete m[S.slug];localStorage.setItem('sq_elo_meta',JSON.stringify(m));location.href=location.origin+location.pathname;
+    localStorage.removeItem(storeKey(S.slug));const m=getGroups();delete m[S.slug];localStorage.setItem('sq_elo_meta',JSON.stringify(m));
+    location.href=location.origin+location.pathname;
   });
   document.getElementById('btnSwitch').addEventListener('click',()=>{location.href=location.origin+location.pathname;});
   updateShare();
