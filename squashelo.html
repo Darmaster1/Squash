@@ -256,6 +256,99 @@ tbody tr:hover td{background:#fafffe;}
   .main{padding:16px 14px 80px;}
   .hl-grid{grid-template-columns:1fr 1fr;}
 }
+
+/* ════ LEGENDS / HOF ════ */
+.hof-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(198px,1fr));gap:11px;margin-bottom:20px;}
+.hof-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh-sm);position:relative;overflow:hidden;transition:var(--ease);}
+.hof-card:hover{box-shadow:var(--sh);transform:translateY(-1px);}
+.hof-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),#f8df80);}
+.hof-ico{font-size:1.4rem;margin-bottom:5px;line-height:1;}
+.hof-lbl{font-size:.59rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3);margin-bottom:2px;}
+.hof-name{font-weight:800;font-size:.88rem;color:var(--text);margin-bottom:1px;}
+.hof-val{font-size:1.35rem;font-weight:900;font-family:var(--mono);color:var(--court-mid);letter-spacing:-1px;}
+.hof-date{font-size:.62rem;color:var(--text-3);margin-top:3px;}
+.hof-none{font-size:.78rem;color:var(--text-3);font-style:italic;margin-top:4px;}
+/* King Throne */
+.throne-tl{display:flex;height:38px;border-radius:8px;overflow:hidden;margin-bottom:7px;border:1px solid var(--border);}
+.throne-seg{display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:rgba(255,255,255,.9);min-width:2px;overflow:hidden;cursor:default;}
+.throne-seg:hover{filter:brightness(1.1);}
+.throne-legend{display:flex;gap:10px;flex-wrap:wrap;}
+.th-leg{display:flex;align-items:center;gap:4px;font-size:.73rem;}
+.th-dot{width:9px;height:9px;border-radius:50%;}
+/* GOAT */
+.goat-big{font-size:1.05rem;font-weight:900;font-family:var(--mono);color:var(--court-mid);}
+.goat-bkdn{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;margin-top:14px;}
+.gbr{margin-bottom:8px;}
+.gbr-hdr{display:flex;justify-content:space-between;font-size:.73rem;margin-bottom:3px;}
+.gbr-lbl{color:var(--text-2);}.gbr-pct{font-weight:700;font-family:var(--mono);}
+.gbr-bg{height:7px;background:var(--surface);border-radius:4px;overflow:hidden;border:1px solid var(--border-dim);}
+.gbr-f{height:100%;border-radius:4px;transition:width .5s ease;}
+/* Awards */
+.award-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(218px,1fr));gap:12px;margin-bottom:16px;}
+.award-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:var(--sh-sm);}
+.award-ico{font-size:1.7rem;margin-bottom:4px;line-height:1;}
+.award-cat{font-size:.59rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3);margin-bottom:2px;}
+.award-name{font-weight:900;font-size:.93rem;margin-bottom:2px;}
+.award-val{font-size:1.1rem;font-weight:900;font-family:var(--mono);color:var(--court-mid);}
+.award-sub{font-size:.7rem;color:var(--text-2);margin-top:2px;}
+.award-none{font-size:.76rem;color:var(--text-3);font-style:italic;}
+/* Graveyard */
+.grave-page{background:#111318;border-radius:var(--r);padding:20px;margin-bottom:16px;}
+.grave-hdr{color:#c0c8d0;font-size:1rem;font-weight:800;margin-bottom:14px;}
+.grave-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:10px;}
+.gc{background:#181d2a;border:1px solid #272d3d;border-radius:var(--r);padding:13px;}
+.gc-ico{font-size:1.3rem;margin-bottom:4px;}
+.gc-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;margin-bottom:2px;}
+.gc-name{font-weight:800;font-size:.84rem;color:#d0d8e0;}
+.gc-val{font-size:1.2rem;font-weight:900;font-family:var(--mono);color:#f87171;}
+.gc-sub{font-size:.63rem;color:#484f60;margin-top:3px;}
+/* Win Probability */
+.prob-outer{overflow-x:auto;margin-top:12px;}
+.prob-t{border-collapse:collapse;font-size:.78rem;}
+.prob-t th{padding:7px 9px;font-size:.6rem;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);background:var(--bg);border:1px solid var(--border-dim);}
+.prob-t td{padding:7px 9px;text-align:center;border:1px solid var(--border-dim);min-width:54px;font-size:.77rem;font-weight:600;}
+.prob-self{background:var(--bg)!important;color:var(--text-3)!important;}
+/* Milestones */
+.ms-row{display:grid;grid-template-columns:118px 1fr 128px;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-dim);}
+.ms-row:last-child{border-bottom:none;}
+.ms-name{font-weight:700;font-size:.87rem;}
+.ms-bar-bg{height:9px;background:var(--bg);border-radius:5px;overflow:hidden;border:1px solid var(--border-dim);}
+.ms-fill{height:100%;background:linear-gradient(90deg,var(--court-light),#38d98a);border-radius:5px;}
+.ms-tags{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;}
+.msb{display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:5px;font-size:.59rem;font-weight:800;font-family:var(--mono);}
+.msb-done{background:var(--mint);color:var(--court-mid);}
+.msb-next{background:var(--warn-bg);color:var(--warn);border:1.5px dashed #f0c060;}
+.msb-lock{background:var(--bg);color:var(--text-3);border:1px solid var(--border);}
+/* Rivals */
+.rival-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:12px;}
+.rival-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
+.rival-head{font-weight:800;font-size:.9rem;margin-bottom:9px;display:flex;align-items:center;gap:8px;}
+.rival-item{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border-dim);font-size:.8rem;gap:8px;}
+.rival-item:last-child{border-bottom:none;}
+.rchip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:.65rem;font-weight:700;}
+.rchip-owns{background:#dcfce7;color:#14532d;}.rchip-nem{background:#fee2e2;color:#991b1b;}
+.rchip-riv{background:#fef3c7;color:#78350f;}.rchip-adv{background:#eff6ff;color:#1e40af;}
+/* Road to #1 */
+.road-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;}
+.road-card.is-king{background:var(--mint-dim);border-color:var(--court-light);}
+.road-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;}
+.road-name{font-weight:800;font-size:.93rem;}
+.road-elo{font-family:var(--mono);font-size:.95rem;font-weight:900;}
+.road-gap{font-family:var(--mono);font-size:1.4rem;font-weight:900;color:var(--danger);}
+.road-stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;}
+.road-stat{font-size:.75rem;color:var(--text-2);}
+.road-stat strong{color:var(--text);font-family:var(--mono);}
+/* Streak Watch */
+.sw-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border-dim);}
+.sw-row:last-child{border-bottom:none;}
+.sw-num{display:flex;align-items:center;justify-content:center;min-width:42px;height:42px;background:#fff0ee;color:#e03d2b;border-radius:10px;font-size:1.1rem;font-weight:900;font-family:var(--mono);border:2px solid #fca5a5;flex-shrink:0;}
+.sw-alert{display:inline-block;padding:2px 7px;border-radius:20px;font-size:.65rem;font-weight:700;background:#fef3c7;color:#78350f;margin-top:2px;}
+/* Similarity */
+.sim-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:var(--r-sm);background:var(--bg);margin-bottom:7px;gap:8px;flex-wrap:wrap;}
+.sim-pct{font-family:var(--mono);font-weight:900;font-size:1rem;color:var(--court-mid);}
+.sim-why{font-size:.67rem;color:var(--text-3);}
+@media(max-width:600px){.ms-row{grid-template-columns:90px 1fr;}.ms-tags{display:none;}}
+
 </style>
 </head>
 <body>
@@ -270,6 +363,9 @@ tbody tr:hover td{background:#fafffe;}
       <li><button data-pg="history">History</button></li>
       <li><button data-pg="stats">Stats</button></li>
       <li><button data-pg="leaderboard">Leaderboard</button></li>
+      <li><button data-pg="legends">Legends</button></li>
+      <li><button data-pg="awards">Awards</button></li>
+      <li><button data-pg="analytics">Analytics</button></li>
     </ul></nav>
   </div>
 </header>
@@ -502,6 +598,50 @@ tbody tr:hover td{background:#fafffe;}
   </div>
 </section>
 
+
+<!-- LEGENDS -->
+<section class="pg" id="pg-legends" style="display:none">
+  <div class="ph"><h2>Legends</h2><p>Hall of Fame records, throne history, and all-time GOAT rankings.</p></div>
+  <div class="stat-tabs" id="legendsTabs">
+    <button class="stat-tab on" data-lg="hof">🏆 Hall of Fame</button>
+    <button class="stat-tab" data-lg="throne">👑 King's Throne</button>
+    <button class="stat-tab" data-lg="goat">🐐 GOAT Score</button>
+  </div>
+  <div id="lg-hof"><div class="hof-grid" id="hofGrid"></div></div>
+  <div id="lg-throne" style="display:none"><div id="throneWrap"></div></div>
+  <div id="lg-goat" style="display:none"><div id="goatWrap"></div></div>
+</section>
+
+<!-- AWARDS -->
+<section class="pg" id="pg-awards" style="display:none">
+  <div class="ph"><h2>Awards</h2><p>Weekly recognition and the ELO Graveyard.</p></div>
+  <div class="stat-tabs">
+    <button class="stat-tab on" data-aw="weekly">🏅 This Week</button>
+    <button class="stat-tab" data-aw="graveyard">☠️ ELO Graveyard</button>
+  </div>
+  <div id="aw-weekly"><div class="award-grid" id="awardGrid"></div><p id="awardWeekNote" style="font-size:.74rem;color:var(--text-3);margin-top:4px"></p></div>
+  <div id="aw-graveyard" style="display:none"><div id="graveyardWrap"></div></div>
+</section>
+
+<!-- ANALYTICS -->
+<section class="pg" id="pg-analytics" style="display:none">
+  <div class="ph"><h2>Analytics</h2><p>Rivalries, projections, win odds, milestones &amp; more.</p></div>
+  <div class="stat-tabs" id="analyticsTabs">
+    <button class="stat-tab on" data-an="rivals">👑 Rivalries</button>
+    <button class="stat-tab" data-an="road">🚀 Road to #1</button>
+    <button class="stat-tab" data-an="prob">📊 Win Probability</button>
+    <button class="stat-tab" data-an="streaks">🔥 Streak Watch</button>
+    <button class="stat-tab" data-an="milestones">🎯 Milestones</button>
+    <button class="stat-tab" data-an="similar">🧬 Similarity</button>
+  </div>
+  <div id="an-rivals"></div>
+  <div id="an-road" style="display:none"></div>
+  <div id="an-prob" style="display:none"></div>
+  <div id="an-streaks" style="display:none"></div>
+  <div id="an-milestones" style="display:none"></div>
+  <div id="an-similar" style="display:none"></div>
+</section>
+
 </main>
 <script>
 (function(){
@@ -614,10 +754,18 @@ const getPElo=(p,type)=>p[typeKey(type)]??1000;
 function kFactor(fmt){return fmt==='bo5'?40:fmt==='bo3'?32:20;}
 function expected(a,b){return 1/(1+Math.pow(10,(b-a)/400));}
 
-function calcStreak(pid){
-  const ms=S.data.matches.filter(m=>[...m.team_a,...m.team_b].includes(pid))
+function calcStreak(pid, type=null){
+  /* type='singles'|'doubles'|null(combined) — KEEP STREAKS SEPARATE PER TYPE */
+  const ms=S.data.matches
+    .filter(m=>(!type||m.type===type)&&[...m.team_a,...m.team_b].includes(pid))
     .sort((a,b)=>new Date(a.date)-new Date(b.date)||S.data.matches.indexOf(a)-S.data.matches.indexOf(b));
-  let str=0;for(let i=ms.length-1;i>=0;i--){const m=ms[i],onA=m.team_a.includes(pid);if((onA&&m.winner==='a')||(!onA&&m.winner==='b'))str++;else break;}return str;
+  let str=0;
+  for(let i=ms.length-1;i>=0;i--){
+    const m=ms[i],onA=m.team_a.includes(pid);
+    if((onA&&m.winner==='a')||(!onA&&m.winner==='b'))str++;
+    else break;
+  }
+  return str;
 }
 
 function ptDiffBonus(wPts,lPts){const tot=wPts+lPts;if(!tot)return 0;return Math.round(Math.max(0,(wPts/tot-0.5)*20));}
@@ -666,7 +814,7 @@ function processMatch(raw){
     const onWin=winTeam.includes(pid);
     const oppAvg=onWin?lAvg:wAvg;
     const isUD=onWin&&underdogWon;
-    const streak=calcStreak(pid);
+    const streak=calcStreak(pid, mtype); /* ★ type-specific streak only */
     const ch=onWin?eloChange(pElo,oppAvg,m.format,true,isUD,streak,winnerNils,+pdb):eloChange(pElo,oppAvg,m.format,false,false,0,0,-pdb);
     m.elo_changes[pid]=ch;
     m.bonuses[pid]={underdog:onWin&&isUD,streak:onWin&&streak>=2?streak:0,seven_nil:onWin?winnerNils:0,pt_diff:pdb};
@@ -687,9 +835,10 @@ function applyMatch(m){
   }
 }
 
-function recordMatch(raw){const m=processMatch(raw);applyMatch(m);S.data.matches.push(m);persist(S.slug,S.data);return m;}
+function recordMatch(raw){invalidateSC();const m=processMatch(raw);applyMatch(m);S.data.matches.push(m);persist(S.slug,S.data);return m;}
 
 function deleteMatch(mid){
+  invalidateSC();
   const idx=S.data.matches.findIndex(m=>m.id===mid);if(idx===-1)return false;
   const m=S.data.matches[idx];
   const ek=m.elo_key||(m.type==='doubles'?'elo_d':'elo_s');
@@ -706,6 +855,7 @@ function deleteMatch(mid){
 }
 
 function recalcAll(){
+  invalidateSC();
   for(const p of S.data.players){p.elo_s=1000;p.elo_d=1000;p.mp_s=0;p.w_s=0;p.l_s=0;p.mp_d=0;p.w_d=0;p.l_d=0;p.matches_played=0;p.wins=0;p.losses=0;}
   const orig=new Map(S.data.matches.map((m,i)=>[m.id,i]));
   const sorted=[...S.data.matches].sort((a,b)=>new Date(a.date)-new Date(b.date)||(orig.get(a.id)||0)-(orig.get(b.id)||0));
@@ -887,8 +1037,10 @@ function renderPlayers(){
   grid.innerHTML=S.data.players.map(p=>{
     const wr=p.matches_played>0?Math.round((p.wins/p.matches_played)*100):0;
     const wrC=wr>=60?'wr-hi':wr>=40?'wr-md':'wr-lo';
-    const str=calcStreak(p.id);
-    const strHtml=str>=2?`<span class="streak-hot">🔥 ${str}-game win streak</span>`:str===1?'<span style="color:var(--text-3)">On a win</span>':'<span style="color:var(--text-3)">—</span>';
+    const strS=calcStreak(p.id,'singles'), strD=calcStreak(p.id,'doubles');
+    const mkStr=(n,lbl)=>n>=2?`<span class="streak-hot">🔥 ${lbl}: ${n}</span>`:n===1?`<span style="color:var(--text-3)">${lbl}: 1 win</span>`:'';
+    const strParts=[mkStr(strS,'S'),mkStr(strD,'D')].filter(Boolean);
+    const strHtml=strParts.length?strParts.join(' &nbsp; '):'<span style="color:var(--text-3)">No active streak</span>';
     const form=getRecentForm(p.id,5);
     const formHtml=form.length?`<div class="form-row"><span style="font-size:.62rem;color:var(--text-3);margin-right:2px">Form:</span>${form.map(r=>`<span class="fpip f${r}">${r}</span>`).join('')}</div>`:'';
     const delBtn=S.viewMode?'':`<button class="pc-del" onclick="window._delPlayer('${p.id}')" title="Remove">×</button>`;
@@ -933,7 +1085,13 @@ function renderLeaderboard(){
     const mp=p[mpK]??0,w=p[wK]??0,l=p[lK]??0;
     const wr=mp>0?Math.round((w/mp)*100):0;
     const wrC=wr>=60?'wr-hi':wr>=40?'wr-md':'wr-lo';
-    const str=calcStreak(p.id);
+    const strS=calcStreak(p.id,'singles'), strD=calcStreak(p.id,'doubles');
+    const streakCell=()=>{
+      if(strS>=2&&strD>=2)return`🔥 S:${strS} D:${strD}`;
+      if(strS>=2)return`🔥 S:${strS}`;
+      if(strD>=2)return`🔥 D:${strD}`;
+      if(strS===1)return'S:1';if(strD===1)return'D:1';return'—';
+    };
     return`<tr>
       <td class="rank-c ${rc}">${r}${medal}</td>
       <td style="font-weight:700">${esc(p.name)}</td>
@@ -942,7 +1100,7 @@ function renderLeaderboard(){
       <td>${mp}</td>
       <td><span class="w-c">${w}</span> — <span class="l-c">${l}</span></td>
       <td class="${wrC}">${wr}%</td>
-      <td>${str>=2?`🔥 ${str}`:str===1?'1':'—'}</td>
+      <td style="font-size:.8rem;font-weight:700;color:${Math.max(strS,strD)>=2?'#e03d2b':'var(--text-3)'}">${streakCell()}</td>
     </tr>`;
   }).join('');
 }
@@ -1119,9 +1277,14 @@ function renderTeams(){
 }
 
 function refreshAll(){
+  invalidateSC();
   const type=document.querySelector('#typeToggle .tgl-btn.on')?.dataset.t||'singles';
   fillSelects(type);renderPlayers();renderLeaderboard();renderHistory();
-  if(document.getElementById('pg-stats')?.classList.contains('on'))renderStats();
+  const active=document.querySelector('.pg.on')?.id;
+  if(active==='pg-stats')renderStats();
+  else if(active==='pg-legends')renderLegends();
+  else if(active==='pg-awards')renderAwards();
+  else if(active==='pg-analytics')renderAnalytics();
   updateShare();
 }
 
@@ -1172,7 +1335,11 @@ function switchPage(pg){
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   const t=document.getElementById('pg-'+pg);if(t)t.classList.add('on');
   document.querySelectorAll('#navTabs button').forEach(b=>b.classList.toggle('on',b.dataset.pg===pg));
-  if(pg==='stats')renderStats();else refreshAll();
+  if(pg==='stats'){renderStats();}
+  else if(pg==='legends'){activeLegendTab='hof';renderLegends();}
+  else if(pg==='awards'){activeAwardTab='weekly';renderAwards();}
+  else if(pg==='analytics'){activeAnalyticsTab='rivals';renderAnalytics();}
+  else{refreshAll();}
 }
 
 /* ═══════════════════════════════════════
@@ -1214,171 +1381,4 @@ function showWelcome(){
   else sec.style.display='none';
   const ni=document.getElementById('newName'),si=document.getElementById('newSlug');
   ni.addEventListener('input',()=>{if(!si.dataset.m)si.value=ni.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);});
-  si.addEventListener('input',()=>si.dataset.m='1');
-  document.getElementById('btnCreate').addEventListener('click',()=>{
-    const name=ni.value.trim();let s=si.value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
-    if(!name){alert('Enter a group name.');return;}if(!s)s=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);if(!s){alert('Enter a valid group code.');return;}
-    localStorage.setItem(storeKey(s),JSON.stringify({players:[],matches:[]}));
-    const m=getGroups();m[s]={name,lastAccessed:new Date().toISOString(),playerCount:0,matchCount:0};localStorage.setItem('sq_elo_meta',JSON.stringify(m));location.href=buildURL(s,'','');
-  });
-  [ni,si].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btnCreate').click();}));
-}
-
-/* ═══════════════════════════════════════
-   EVENT LISTENERS
-═══════════════════════════════════════ */
-function attachListeners(){
-  // nav
-  document.getElementById('navTabs').addEventListener('click',e=>{if(e.target.tagName==='BUTTON'&&e.target.dataset.pg)switchPage(e.target.dataset.pg);});
-
-  // match type toggle
-  document.getElementById('typeToggle').addEventListener('click',e=>{
-    if(!e.target.classList.contains('tgl-btn')||e.target.disabled)return;
-    document.querySelectorAll('#typeToggle .tgl-btn').forEach(b=>b.classList.remove('on'));e.target.classList.add('on');
-    const isDbl=e.target.dataset.t==='doubles';
-    document.getElementById('singlesForm').style.display=isDbl?'none':'block';
-    document.getElementById('doublesForm').style.display=isDbl?'block':'none';
-    fillSelects(e.target.dataset.t);renderGameInputs();document.getElementById('recordResult').innerHTML='';
-  });
-
-  // format toggle
-  document.getElementById('fmtToggle').addEventListener('click',e=>{
-    if(!e.target.classList.contains('tgl-btn')||e.target.disabled)return;
-    document.querySelectorAll('#fmtToggle .tgl-btn').forEach(b=>b.classList.remove('on'));e.target.classList.add('on');
-    renderGameInputs();document.getElementById('recordResult').innerHTML='';
-  });
-
-  // add player
-  document.getElementById('btnAddPlayer').addEventListener('click',()=>{
-    if(S.viewMode)return;const n=document.getElementById('newPlayerName').value.trim();
-    if(!n){alert('Enter a player name.');return;}if(getPByName(n)){alert('Player already exists.');return;}
-    S.data.players.push({id:genId(),name:n,elo_s:1000,elo_d:1000,matches_played:0,wins:0,losses:0,mp_s:0,w_s:0,l_s:0,mp_d:0,w_d:0,l_d:0});
-    persist(S.slug,S.data);document.getElementById('newPlayerName').value='';refreshAll();
-  });
-  document.getElementById('newPlayerName').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btnAddPlayer').click();});
-
-  // record match
-  document.getElementById('btnRecord').addEventListener('click',()=>{
-    if(S.viewMode)return;
-    const isDbl=document.querySelector('#typeToggle .tgl-btn.on').dataset.t==='doubles';
-    const fmt=document.querySelector('#fmtToggle .tgl-btn.on').dataset.f;
-    const date=document.getElementById('matchDate').value||new Date().toISOString().split('T')[0];
-    const res=document.getElementById('recordResult');const pfx=isDbl?'d':'s';
-    let team_a,team_b;
-    if(!isDbl){
-      const pa=document.getElementById('sPA').value,pb=document.getElementById('sPB').value;
-      if(!pa||!pb){res.innerHTML='<p style="color:var(--danger);margin-top:10px">Select both players.</p>';return;}
-      if(pa===pb){res.innerHTML='<p style="color:var(--danger);margin-top:10px">A player cannot play against themselves.</p>';return;}
-      team_a=[pa];team_b=[pb];
-    }else{
-      const a1=document.getElementById('dA1').value,a2=document.getElementById('dA2').value,b1=document.getElementById('dB1').value,b2=document.getElementById('dB2').value;
-      if(!a1||!a2||!b1||!b2){res.innerHTML='<p style="color:var(--danger);margin-top:10px">Select all four players.</p>';return;}
-      if(new Set([a1,a2,b1,b2]).size!==4){res.innerHTML='<p style="color:var(--danger);margin-top:10px">All four players must be unique.</p>';return;}
-      team_a=[a1,a2];team_b=[b1,b2];
-    }
-    const maxG=fmt==='bo5'?5:fmt==='bo3'?3:1,winT=fmt==='bo5'?3:fmt==='bo3'?2:1;
-    const games=[];
-    for(let i=1;i<=maxG;i++){
-      const av=parseInt(document.getElementById(`${pfx}_g${i}_a`)?.value),bv=parseInt(document.getElementById(`${pfx}_g${i}_b`)?.value);
-      if(isNaN(av)||isNaN(bv)){if(i<=winT){res.innerHTML=`<p style="color:var(--danger);margin-top:10px">Fill at least ${winT} game score${winT>1?'s':''}.</p>`;return;}break;}
-      if(av<0||bv<0){res.innerHTML='<p style="color:var(--danger);margin-top:10px">Points cannot be negative.</p>';return;}
-      if(av===bv){res.innerHTML='<p style="color:var(--danger);margin-top:10px">Game scores cannot be tied.</p>';return;}
-      if(Math.max(av,bv)<7){res.innerHTML='<p style="color:var(--danger);margin-top:10px">A game must be won with at least 7 points.</p>';return;}
-      games.push({a:av,b:bv});
-    }
-    let sa=0,sb=0;for(const g of games){if(g.a>g.b)sa++;else sb++;}
-    if(sa!==winT&&sb!==winT){res.innerHTML=`<p style="color:var(--danger);margin-top:10px">Winner must reach ${winT} game win${winT>1?'s':''}. Current: ${sa}\u2013${sb}.</p>`;return;}
-    const match=recordMatch({date,type:isDbl?'doubles':'singles',format:fmt,team_a,team_b,games,score_a:sa,score_b:sb});
-    refreshAll();
-    const wTeam=match.winner==='a'?team_a:team_b;
-    const wNames=wTeam.map(id=>getP(id)?.name||'?').join(' & ');
-    const wPts=match.winner==='a'?match.total_pts.a:match.total_pts.b,lPts=match.winner==='a'?match.total_pts.b:match.total_pts.a;
-    const chips=Object.entries(match.elo_changes).map(([pid,ch])=>{const nm=getP(pid)?.name||'?';return`<div class="elo-chip ${ch>0?'elo-win':'elo-lose'}">${esc(nm)}: ${ch>0?'+':''}${ch}</div>`;}).join('');
-    const bonusList=[];const seen=new Set();
-    for(const[,b] of Object.entries(match.bonuses||{})){if(b.underdog&&!seen.has('ud')){bonusList.push('\U0001f436 Underdog');seen.add('ud');}if(b.streak>0&&!seen.has('s'+b.streak)){bonusList.push(`\U0001f525 Streak \xd7${b.streak}`);seen.add('s'+b.streak);}if(b.seven_nil>0&&!seen.has('n'+b.seven_nil)){bonusList.push(`\U0001f480 7-Nil \xd7${b.seven_nil} (+${b.seven_nil*15})`);seen.add('n'+b.seven_nil);}}
-    if(match.point_diff_bonus>0)bonusList.push(`\U0001f4ca Point diff +${match.point_diff_bonus}`);
-    const typeLabel=isDbl?'Doubles':'Singles';
-    res.innerHTML=`<div class="res-card">
-      <div class="res-title">\u2705 ${esc(wNames)} wins! <span style="font-size:.8rem;font-weight:500;color:var(--text-2)">(${typeLabel})</span></div>
-      <div class="res-meta">
-        <div class="res-mi"><div class="res-mlbl">Games</div><strong>${match.score_a}\u2013${match.score_b}</strong></div>
-        <div class="res-mi"><div class="res-mlbl">Points</div><strong>${wPts}\u2013${lPts}</strong></div>
-        ${match.point_diff_bonus>0?`<div class="res-mi"><div class="res-mlbl">Diff Bonus</div><strong style="color:var(--court-mid)">+${match.point_diff_bonus}</strong></div>`:''}
-      </div>
-      <div style="font-size:.7rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">${typeLabel} ELO Changes</div>
-      <div class="elo-grid">${chips}</div>
-      ${bonusList.length?`<div class="bonus-row">${bonusList.map(b=>`<span class="badge b-pd">${b}</span>`).join('')}</div>`:''}
-    </div>`;
-  });
-
-  // stats sub-tabs
-  document.querySelectorAll('.stat-tab').forEach(btn=>{
-    btn.addEventListener('click',()=>{document.querySelectorAll('.stat-tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');activeStatTab=btn.dataset.st;renderStats();});
-  });
-
-  // chart type toggle
-  document.getElementById('chartTypeToggle').addEventListener('click',e=>{
-    if(!e.target.classList.contains('tgl-btn'))return;
-    document.querySelectorAll('#chartTypeToggle .tgl-btn').forEach(b=>b.classList.remove('on'));e.target.classList.add('on');
-    chartState.type=e.target.dataset.ct;drawEloChart('eloChartSvg',chartState.pids,chartState.type);
-  });
-
-  // H2H type toggle
-  document.getElementById('h2hTypeToggle').addEventListener('click',e=>{
-    if(!e.target.classList.contains('tgl-btn'))return;
-    document.querySelectorAll('#h2hTypeToggle .tgl-btn').forEach(b=>b.classList.remove('on'));e.target.classList.add('on');
-    activeH2HType=e.target.dataset.ht;renderH2H(activeH2HType);
-  });
-
-  // leaderboard type toggle
-  document.getElementById('lbTypeToggle').addEventListener('click',e=>{
-    if(!e.target.classList.contains('tgl-btn'))return;
-    document.querySelectorAll('#lbTypeToggle .tgl-btn').forEach(b=>b.classList.remove('on'));e.target.classList.add('on');renderLeaderboard();
-  });
-
-  // delete handlers
-  window._delPlayer=function(pid){
-    if(S.viewMode)return;const p=getP(pid);if(!p)return;
-    if(!confirm(`Remove "${p.name}" and all their matches?`))return;
-    S.data.players=S.data.players.filter(x=>x.id!==pid);
-    S.data.matches=S.data.matches.filter(m=>![...m.team_a,...m.team_b].includes(pid));
-    recalcAll();refreshAll();
-  };
-  window._delMatch=function(mid){
-    if(S.viewMode)return;if(!confirm('Delete this match and reverse ELO changes?'))return;if(deleteMatch(mid))refreshAll();
-  };
-
-  // export/import/reset
-  document.getElementById('btnExport').addEventListener('click',()=>{
-    const b=new Blob([JSON.stringify(S.data,null,2)],{type:'application/json'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`squash-elo-${S.slug}.json`;a.click();
-  });
-  document.getElementById('btnImport').addEventListener('click',()=>{if(!S.viewMode)document.getElementById('importFile').click();});
-  document.getElementById('importFile').addEventListener('change',function(e){
-    if(S.viewMode)return;const f=e.target.files[0];if(!f)return;
-    const r=new FileReader();r.onload=ev=>{
-      try{const imp=JSON.parse(ev.target.result);if(!imp.players||!imp.matches)throw 0;
-      if(!confirm(`Import ${imp.players.length} players & ${imp.matches.length} matches? Replaces current data.`))return;
-      S.data=imp;recalcAll();persist(S.slug,S.data);refreshAll();}catch(err){alert('Invalid file.');}
-    };r.readAsText(f);e.target.value='';
-  });
-  document.getElementById('btnReset').addEventListener('click',()=>{
-    if(S.viewMode)return;
-    if(confirm('Delete ALL players and matches?')&&confirm('Final confirmation \u2014 cannot be undone.')){
-      S.data={players:[],matches:[]};persist(S.slug,S.data);refreshAll();document.getElementById('recordResult').innerHTML='';
-    }
-  });
-  document.getElementById('btnDelGroup').addEventListener('click',()=>{
-    if(S.viewMode)return;if(!confirm(`Delete group "${S.name}" permanently?`))return;
-    localStorage.removeItem(storeKey(S.slug));const m=getGroups();delete m[S.slug];localStorage.setItem('sq_elo_meta',JSON.stringify(m));
-    location.href=location.origin+location.pathname;
-  });
-  document.getElementById('btnSwitch').addEventListener('click',()=>{location.href=location.origin+location.pathname;});
-  updateShare();
-}
-
-init();
-})();
-</script>
-</body>
-</html>
+  si.ad
